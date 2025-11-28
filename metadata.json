@@ -1,0 +1,7 @@
+{
+  "name": "Toro Group Financial",
+  "description": "Offline-first financial management system for Toro Group with dashboard, transaction tracking, and account management.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
