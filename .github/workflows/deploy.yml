@@ -1,21 +1,22 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Archivo: .github/workflows/deploy.yml
+
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
+  # Se ejecuta en cada push a la rama 'main'
   push:
     branches: ['main']
 
-  # Allows you to run this workflow manually from the Actions tab
+  # Permite ejecutar el workflow manualmente
   workflow_dispatch:
 
-# Sets the GITHUB_TOKEN permissions to allow deployment to GitHub Pages
+# Otorga los permisos necesarios para el despliegue en GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow one concurrent deployment
+# Asegura que solo se ejecute un despliegue a la vez
 concurrency:
   group: 'pages'
   cancel-in-progress: true
@@ -31,24 +32,25 @@ jobs:
         uses: actions/checkout@v5
         
       - name: 🟢 Set up Node.js
+        # Configura Node.js y el caché para pnpm
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # O la versión que uses (LTS recomendado)
-          cache: 'pnpm' # 💡 CLAVE: Usar 'pnpm' para el caché
-          
-      # 🔑 CLAVE: Configurar pnpm
+          node-version: 20
+          cache: 'pnpm' 
+
+      # 🔑 PASO CORREGIDO Y ESENCIAL: Instalar pnpm
       - name: 🔧 Setup pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 8 # Usar la versión específica o omitir para la última
+          version: 8 # Usar una versión específica o la última
           run_install: false # Haremos la instalación en el siguiente paso
 
       - name: 📦 Install dependencies with pnpm
-        # 🔑 CLAVE: Cambiar 'npm ci' por 'pnpm install --frozen-lockfile'
+        # Ahora 'pnpm' está disponible y realiza la instalación
         run: pnpm install --frozen-lockfile
 
       - name: 🔨 Build project (Vite)
-        # Esto asume que tienes un script 'build' en tu package.json que usa Vite
+        # Ejecuta el script 'build' (Asegúrate de configurar la propiedad 'base' en vite.config.js)
         run: pnpm run build
         
       - name: ⚙️ Setup Pages
@@ -57,6 +59,7 @@ jobs:
       - name: ⬆️ Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
+          # Sube la carpeta de salida de Vite
           path: './dist' 
           
       - name: 🚀 Deploy to GitHub Pages
