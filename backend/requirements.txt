@@ -16,3 +16,5 @@ python-json-logger
 sentry-sdk[fastapi]
 supabase
 sqlalchemy
+requests
+beautifulsoup4
