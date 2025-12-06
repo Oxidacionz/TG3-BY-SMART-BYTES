@@ -29,6 +29,10 @@
     - [ ] Implementar filtros de limpieza antes de pasar Tesseract: binarización, eliminación de ruido y corrección de perspectiva. Esto mejora drásticamente la lectura de números.
 - [ ] **2.3. Detección de Plantillas (Template Matching)**
     - [ ] En lugar de buscar texto suelto, crear "máscaras" para comprobantes conocidos (Zelle, Banesco App). Si la imagen coincide con la estructura visual, extraer coordenadas fijas.
+- [ ] **2.4. Mejoras UX/UI (Inspiración SB Financials)**
+    - [ ] **Módulo de Metas de Ahorro:** Visualización de progreso de objetivos.
+    - [ ] **Tutorial Interactivo:** Guía paso a paso para onboarding de operadores.
+    - [ ] **Historial Financiero:** Reportes avanzados de gastos e ingresos.
 
 ## 🤖 Fase 3: IA Local Especializada (70% - 100%)
 *Implementar modelos pequeños (SML - Small Language Models) on-premise si los scripts no bastan.*
