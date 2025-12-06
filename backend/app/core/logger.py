@@ -1,0 +1,20 @@
+import logging
+import sys
+from pythonjsonlogger import json
+from app.core.config import settings
+
+def get_logger(name: str):
+    logger = logging.getLogger(name)
+    logger.setLevel(settings.LOG_LEVEL)
+    
+    if not logger.handlers:
+        handler = logging.StreamHandler(sys.stdout)
+        # Use JSON Formatter
+        formatter = json.JsonFormatter(
+            "%(asctime)s %(name)s %(levelname)s %(message)s",
+            datefmt="%Y-%m-%dT%H:%M:%S%z"
+        )
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        
+    return logger
