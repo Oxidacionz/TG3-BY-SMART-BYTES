@@ -305,7 +305,7 @@ const App = () => {
 
   // Fetch Data from Backend
   const { data: transactions, refetch: refetchTransactions } = useFetchData('/transactions/', []);
-  const { data: stats } = useFetchData('/stats/', { chart_data: [], ticker: { global_rate: "---", bcv_usd: "---", binance_buy: "---", binance_sell: "---", zelle: "---" }, volume: 0, net_profit: 0, pending_count: 0 });
+  const { data: stats, refetch: refetchStats } = useFetchData('/stats/', { chart_data: [], ticker: { global_rate: "---", bcv_usd: "---", binance_buy: "---", binance_sell: "---", zelle: "---" }, volume: 0, net_profit: 0, pending_count: 0 });
   const { data: clients } = useFetchData('/resources/clients', []);
   const { data: operators } = useFetchData('/resources/operators', []);
 
@@ -339,6 +339,21 @@ const App = () => {
       }
     } catch (e) {
       console.error("Error saving transaction", e);
+    }
+  };
+
+  // Force Refresh Rates Handler
+  const [isRefreshingRates, setIsRefreshingRates] = useState(false);
+  const handleRefreshRates = async () => {
+    setIsRefreshingRates(true);
+    try {
+      await fetch(`${API_URL}/rates/force-refresh`, { method: 'POST' });
+      // Wait a bit for DB to settle if needed, then refetch
+      setTimeout(() => refetchStats(), 1000);
+    } catch (e) {
+      console.error("Error refreshing rates", e);
+    } finally {
+      setIsRefreshingRates(false);
     }
   };
 
@@ -496,7 +511,12 @@ const App = () => {
               {/* Ticker */}
               <div className="bg-slate-900 rounded-xl p-1 text-white flex items-center shadow-lg overflow-hidden">
                 <div className="bg-brand-600 px-4 py-3 rounded-lg flex flex-col items-center min-w-[120px]">
-                  <span className="text-xs opacity-80">Tasa Promedio Global</span>
+                  <span className="text-xs opacity-80 flex items-center gap-2">
+                    Tasa Promedio Global
+                    <button onClick={handleRefreshRates} className={`hover:text-white text-brand-200 transition-colors ${isRefreshingRates ? 'animate-spin' : ''}`} title="Forzar actualización de tasas">
+                      <Icons.Refresh />
+                    </button>
+                  </span>
                   <span className="text-xl font-bold">{stats.ticker?.global_rate || '---'}</span>
                 </div>
                 <div className="flex-1 flex items-center justify-between px-6">
