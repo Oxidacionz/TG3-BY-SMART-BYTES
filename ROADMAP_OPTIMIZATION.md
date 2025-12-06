@@ -16,7 +16,7 @@
 - [x] **1.3. Conexión Webhook WhatsApp (Integración Scraper)**
     - [x] Integrar Scraper Externo (Railway) para enviar tasas a Supabase.
     - [x] Configurar variables `_TORO` en Railway.
-    - [ ] Desplegar backend principal en Railway/Render (Falta esto).
+    - [x] Desplegar backend principal en Render (TG3 Core).
     - [ ] Conectar webhook a n8n para recibir imágenes reales y probar el flujo end-to-end.
 
 ## 🧠 Fase 2: Mejora de "Inteligencia Local" (30% - 70%)
