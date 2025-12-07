@@ -102,9 +102,9 @@ class TransactionRepository:
         
         if real_rates:
             ticker_data = {
-                "global_rate": f"{real_rates.get('usd_binance_sell', 0)} VES", # Usamos Binance Venta como referencia global
+                "global_rate": f"{real_rates.get('usd_binance_sell', 0):.2f} VES", 
                 "bcv_usd": real_rates.get('usd_bcv', 0),
-                "eur_bcv": real_rates.get('eur_bcv', 0),
+                "bcv_eur": real_rates.get('eur_bcv', 0),
                 "binance_buy": real_rates.get('usd_binance_buy', 0),
                 "binance_sell": real_rates.get('usd_binance_sell', 0),
                 "zelle": real_rates.get('usd_binance_sell', 0) # Placeholder for Zelle
