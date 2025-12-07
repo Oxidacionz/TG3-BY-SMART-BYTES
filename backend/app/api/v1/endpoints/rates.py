@@ -14,30 +14,22 @@ async def force_refresh_rates():
     Returns the newly updated rates.
     """
     try:
-        print("🔄 Force Refresh: Starting scrape job...")
+        print("🔄 Force Refresh: Request received.")
+        print("⚠️  Internal Scraping DISABLED. Rates are now managed by external microservice.")
         
-        # 1. Scrape BCV (Run in executor to avoid blocking)
+        # --- MIGRACIÓN: Scraper interno desactivado ---
+        # 1. Scrape BCV (Disabled)
+        # bcv_result = await loop.run_in_executor(None, scrape_bcv_rates)
+        # ...
+        
+        # 2. Scrape Binance (Disabled)
+        # ...
+        
+        # 3. Save to Database (Disabled)
+        # await loop.run_in_executor(None, database_sb.save_rates, ...)
+        
+        # 4. Return latest rates (Read from shared Global ID)
         loop = asyncio.get_event_loop()
-        bcv_result = await loop.run_in_executor(None, scrape_bcv_rates)
-        
-        usd_bcv = bcv_result.get("USD") if bcv_result else 0.0
-        eur_bcv = bcv_result.get("EUR") if bcv_result else 0.0
-        
-        # 2. Scrape Binance (Run in executor)
-        # Note: 'obtener_precios_p2p' is synchronous blocking code
-        precios_buy = await loop.run_in_executor(None, obtener_precios_p2p, "BUY")
-        precios_sell = await loop.run_in_executor(None, obtener_precios_p2p, "SELL")
-        
-        avg_buy = calcular_promedio(precios_buy)
-        avg_sell = calcular_promedio(precios_sell)
-        
-        print(f"📊 Scrape Results: BCV_USD={usd_bcv}, BCV_EUR={eur_bcv}, BinBuy={avg_buy}, BinSell={avg_sell}")
-        
-        # 3. Save to Database (Supabase + Local Fallback)
-        if usd_bcv or avg_buy > 0:
-             await loop.run_in_executor(None, database_sb.save_rates, usd_bcv, eur_bcv, avg_buy, avg_sell)
-        
-        # 4. Return latest rates
         latest = await loop.run_in_executor(None, database_sb.get_latest_rates)
         
         if not latest:

@@ -118,14 +118,38 @@ def save_rates_to_supabase(usd_bcv: float, eur_bcv: float, usd_binance_buy: floa
 
 def get_rates_from_supabase() -> dict | None:
     """
-    Get latest rates from Supabase and flatten them into the expected dictionary format.
+    Get latest rates from Supabase.
+    Priority 1: Global Microservice Row (Single Row with all rates)
+    Priority 2: Legacy Audit Log (Multiple rows per currency)
     """
     try:
         supabase = get_supabase_client()
         if not supabase:
             return None
-        
-        # Fetch last 20 rates to ensure we cover all pairs
+
+        # 1. Try Fetching Global Microservice Row
+        try:
+            # ID Fijo usado por el Scraper-Financial-Service
+            GLOBAL_ID = "00000000-0000-0000-0000-000000000001"
+            
+            global_res = supabase.table("exchange_rates").select("*").eq("id", GLOBAL_ID).single().execute()
+            if global_res.data:
+                d = global_res.data
+                # Return standardized dict
+                return {
+                    "usd_bcv": float(d.get("usd_bcv", 0) or 0),
+                    "eur_bcv": float(d.get("eur_bcv", 0) or 0),
+                    "usd_binance_buy": float(d.get("usd_binance_buy", 0) or 0),
+                    "usd_binance_sell": float(d.get("usd_binance_sell", 0) or 0),
+                    "last_updated": d.get("last_updated"),
+                    "source": "Microservice_Global"
+                }
+        except Exception as global_err:
+            # Si falla (ej. tabla no migrada, row no existe), intentamos método antiguo
+            # print(f"Global row fetch failed: {global_err}") 
+            pass
+
+        # 2. Legacy Fallback (Audit Log Style)
         result = supabase.table("exchange_rates") \
             .select("*") \
             .is_("user_id", "null") \
@@ -138,36 +162,24 @@ def get_rates_from_supabase() -> dict | None:
             
         rates_data = result.data
         
-        # Flatten logic
-        # We need to find the latest entry for each category
-        
         output = {
             "usd_bcv": 0.0,
             "eur_bcv": 0.0,
             "usd_binance_buy": 0.0,
             "usd_binance_sell": 0.0,
             "last_updated": None,
-            "source": "Supabase"
+            "source": "Supabase_Legacy"
         }
         
-        latest_time = None
-
         for row in rates_data:
             fc = row.get("from_currency")
             tc = row.get("to_currency")
             buy = row.get("is_buy_rate")
             rate = row.get("rate")
-            t.date = row.get("captured_at")
+            date_captured = row.get("captured_at")
             
-            # Update latest time found
-             # (Simple comparison string isoformat works for basic latest check)
             if output["last_updated"] is None:
-                output["last_updated"] = t.date
-            
-            # BCV USD (USD -> VES) - Assuming BCV if generic USD-VES
-            # Caution: If we have multiple sources for USD-VES (e.g. Parallel), we need a 'source' column or convention.
-            # Current schema has no 'source' column in exchange_rates table??
-            # Let's assume standard system insertions are BCV/Binance based on currency types.
+                output["last_updated"] = date_captured
             
             if fc == "USD" and tc == "VES" and output["usd_bcv"] == 0:
                 output["usd_bcv"] = rate

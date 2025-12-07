@@ -96,20 +96,31 @@ class TransactionRepository:
         """
         Calculate stats on the fly from transactions
         """
+        from app.core import database_sb
+        real_rates = database_sb.get_latest_rates()
+        ticker_data = {}
+        
+        if real_rates:
+            ticker_data = {
+                "global_rate": f"{real_rates.get('usd_binance_sell', 0)} VES", # Usamos Binance Venta como referencia global
+                "bcv_usd": real_rates.get('usd_bcv', 0),
+                "eur_bcv": real_rates.get('eur_bcv', 0),
+                "binance_buy": real_rates.get('usd_binance_buy', 0),
+                "binance_sell": real_rates.get('usd_binance_sell', 0),
+                "zelle": real_rates.get('usd_binance_sell', 0) # Placeholder for Zelle
+            }
+        
         if self.use_mock:
             # Simple aggregation logic
             total_vol = sum(float(t['amount']) for t in self.transactions if t.get('currency') == 'USD')
             total_profit = sum(float(t.get('profit', 0)) for t in self.transactions)
             pending = sum(1 for t in self.transactions if t.get('status') == 'Pendiente')
             
-            # Chart data (Mocked trend for now but could be real agg)
+            # Chart data
             chart_data = [
               { 'name': '08:00', 'volume': 400, 'profit': 20 },
               { 'name': '10:00', 'volume': 300, 'profit': 15 },
               { 'name': '12:00', 'volume': 600, 'profit': 30 },
-              { 'name': '14:00', 'volume': 500, 'profit': 25 },
-              { 'name': '16:00', 'volume': 700, 'profit': 35 },
-              { 'name': '18:00', 'volume': 450, 'profit': 22 },
             ]
             
             return {
@@ -117,7 +128,7 @@ class TransactionRepository:
                 "net_profit": total_profit,
                 "pending_count": pending,
                 "chart_data": chart_data,
-                "ticker": {
+                "ticker": ticker_data if ticker_data else {
                     "global_rate": "36.00 VES",
                     "bcv_usd": 35.50,
                     "binance_buy": 36.10,
@@ -125,7 +136,17 @@ class TransactionRepository:
                     "zelle": 36.00
                 }
             }
-        return {}
+
+        else:
+             # REAL PRODUCTION LOGIC (Basic implementation)
+             # TODO: Aggregate real stats from Supabase transactions if needed
+             return {
+                 "volume": 0,
+                 "net_profit": 0,
+                 "pending_count": 0,
+                 "chart_data": [],
+                 "ticker": ticker_data
+             }
 
 # Singleton instance
 repo = TransactionRepository()

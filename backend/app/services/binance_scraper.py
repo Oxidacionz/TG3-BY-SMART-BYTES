@@ -108,7 +108,29 @@ def save_to_smart_bytes(usd_binance_buy: float, usd_binance_sell: float):
             else:
                 print("⚠️ Error al insertar en Supabase (sin datos).")
     except Exception as e:
-        print(f"❌ Error enviando a Supabase: {e}")
+        print(f"❌ Error enviando a Supabase Principal: {e}")
+
+    # ------------------------------------------------------------------
+    #  Sincronización Secundaria (ToroGroup / TG2)
+    # ------------------------------------------------------------------
+    url_tg2 = os.environ.get("SUPABASE_URL_TORO")
+    key_tg2 = os.environ.get("SUPABASE_SERVICE_KEY_TORO")
+
+    if url_tg2 and key_tg2:
+        try:
+            print("🚀 Sincronizando también con ToroGroup (Secondary Database)...")
+            supabase_tg2 = create_client(url_tg2, key_tg2)
+            
+            # Re-usamos rates_to_insert generado arriba
+            if rates_to_insert:
+                res_tg2 = supabase_tg2.table("exchange_rates").insert(rates_to_insert).execute()
+                if res_tg2.data:
+                    print(f"✅ Sincronizado con ToroGroup: {len(res_tg2.data)} tasas enviadas.")
+                else:
+                    print("⚠️ ToroGroup insert returned no data")
+        except Exception as e_tg2:
+             print(f"❌ Error enviando a ToroGroup: {e_tg2}")
+
 
 def run_sync():
     """Ejecuta el scraping y la sincronización."""
