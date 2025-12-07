@@ -1,6 +1,7 @@
 import React, { useState, useEffect, ReactNode } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { SmartScanner } from './components/SmartScanner';
+import { Tutorial, TutorialStep } from './components/Tutorial';
 
 /**
  * =================================================================================
@@ -34,6 +35,10 @@ const Icons = {
   Send: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" x2="11" y1="2" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>,
   Clock: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
   Refresh: () => <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 16h5v5" /></svg>,
+  Toro: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 6c0-2.2 1.8-4 4-4s4 1.8 4 4" /><path d="M7 6A7 7 0 0 0 2 11a5 5 0 0 0 5 5 3 3 0 0 1 3 3h4a3 3 0 0 1 3-3 5 5 0 0 0 5-5 7 7 0 0 0-5-5" /><circle cx="8" cy="11" r="1.5" className="fill-current" /><circle cx="16" cy="11" r="1.5" className="fill-current" /></svg>,
+  Camel: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 19H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.5a1 1 0 0 0 .8-.4l.9-1.2C6.8 4.6 7.6 4 8.5 4c.6 0 1.2.3 1.5.8l1 1.6c.4.7 1.3.8 1.9.3l.6-.4c.7-.6 1.8-.6 2.5 0l.4.3c.7.5 1.7.5 2.4.1l.6-.4c.6-.4 1.4-.4 2 0l1 0.7C23.2 8.5 24 9.6 24 10.8V17a2 2 0 0 1-2 2h-1" /><path d="M8 19v-5" /><path d="M16 19v-5" /></svg>,
+  Edit: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>,
+  Inbox: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></svg>,
 };
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8002/api/v1' : 'https://tg3-by-smart-bytes.onrender.com/api/v1');
@@ -123,13 +128,21 @@ const Card: React.FC<{ children: ReactNode; className?: string }> = ({ children,
 // 4. Badge
 const Badge: React.FC<{ status: string }> = ({ status }) => {
   let colorClass = "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300";
-  if (status === 'Completado') colorClass = "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800";
-  if (status === 'Pendiente') colorClass = "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800";
+  if (status === 'Completado' || status === 'Recibido' || status === 'Pagado') colorClass = "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800";
+  if (status === 'Pendiente' || status === 'Pendiente Recepción' || status === 'En Revisión') colorClass = "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800";
   if (status === 'Cancelado') colorClass = "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800";
 
+  const getIcon = () => {
+    if (status === 'Pendiente Recepción') return <span className="mr-1">📥</span>;
+    if (status === 'En Revisión') return <span className="mr-1">👀</span>;
+    if (status === 'Pagado') return <span className="mr-1">💸</span>;
+    if (status === 'Recibido') return <span className="mr-1">✅</span>;
+    return null;
+  };
+
   return (
-    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
-      {status}
+    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium flex items-center w-fit ${colorClass}`}>
+      {getIcon()}{status}
     </span>
   );
 };
@@ -194,38 +207,55 @@ const StatCard: React.FC<{ title: string; value: string; subtext: string; icon?:
 const SidebarItem: React.FC<{ icon: ReactNode; label: string; active?: boolean; onClick: () => void }> = ({ icon, label, active, onClick }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${active
-      ? 'text-brand-400 bg-slate-800 border-r-2 border-brand-500'
-      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+    className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all relative overflow-hidden group ${active
+      ? 'text-white bg-gradient-to-r from-purple-900/50 to-slate-900 border-r-4 border-amber-400'
+      : 'text-slate-400 hover:text-amber-200 hover:bg-slate-800/50'
       }`}
   >
-    {icon}
-    <span>{label}</span>
+    {active && (
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-transparent pointer-events-none" />
+    )}
+    <span className={`relative z-10 ${active ? 'text-amber-300 drop-shadow-sm' : ''}`}>{icon}</span>
+    <span className={`relative z-10 ${active ? 'font-bold bg-gradient-to-r from-amber-200 to-amber-500 bg-clip-text text-transparent' : ''}`}>{label}</span>
   </button>
 );
 
-const UserDropdown = () => {
+const UserDropdown: React.FC<{ onRestartTutorial: () => void; onLogout: () => void; isDemoMode: boolean }> = ({ onRestartTutorial, onLogout, isDemoMode }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="relative">
-      <button onClick={() => setIsOpen(!isOpen)} className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-600 text-white font-bold text-sm hover:bg-brand-700 transition-colors">
-        T
+      <button onClick={() => setIsOpen(!isOpen)} className={`flex items-center justify-center w-8 h-8 rounded-full text-white font-bold text-sm transition-colors shadow-md ${isDemoMode ? 'bg-amber-500 hover:bg-amber-600' : 'bg-brand-800 hover:bg-brand-900 ring-2 ring-brand-600'}`}>
+        {isDemoMode ? (
+          <div className="relative flex items-center justify-center">
+            <Icons.Camel />
+            <span className="absolute -bottom-2 -right-3 bg-white text-amber-600 text-[9px] font-bold px-1 rounded-full border border-amber-500 shadow-sm">
+              #1
+            </span>
+          </div>
+        ) : (
+          <Icons.Toro />
+        )}
       </button>
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)}></div>
           <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-20 py-1 animate-fade-in-down">
             <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-              <p className="text-sm font-bold text-slate-900 dark:text-white">ToroPrincipal</p>
-              <p className="text-xs text-brand-500 font-bold">ADMIN</p>
-              <p className="text-xs text-slate-500">Oficina Principal</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">{isDemoMode ? 'Operador Invitado' : 'ToroPrincipal'}</p>
+              <p className={`text-xs font-bold ${isDemoMode ? 'text-amber-500' : 'text-brand-500'}`}>{isDemoMode ? 'CAMELLO / GUEST' : 'ADMIN'}</p>
+              <p className="text-xs text-slate-500">{isDemoMode ? 'Entorno de Pruebas' : 'Oficina Principal'}</p>
             </div>
-            <button className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
-              <Icons.Users /> Configuración
+            {!isDemoMode && (
+              <button className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
+                <Icons.Users /> Configuración
+              </button>
+            )}
+            <button onClick={() => { setIsOpen(false); onRestartTutorial(); }} className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
+              <span className="text-amber-500">✨</span> Ver Tutorial Interactivo
             </button>
             <div className="border-t border-slate-200 dark:border-slate-700 mt-1"></div>
-            <button onClick={() => window.location.reload()} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
+            <button onClick={() => { setIsOpen(false); onLogout(); }} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
               Cerrar Sesión
             </button>
@@ -236,13 +266,199 @@ const UserDropdown = () => {
   );
 }
 
+// --- DEMO DATA CONSTANTS (Global) ---
+const DEMO_STATS = {
+  volume: "38,450.00",
+  net_profit: "1,845.20",
+  pending_count: 12,
+  ticker: {
+    global_rate: "48.50",
+    bcv_usd: "46.20",
+    bcv_eur: "49.10",
+    binance_buy: "48.10",
+    binance_sell: "48.80",
+    zelle: "47.50"
+  },
+  chart_data: [
+    { name: 'Lun', volume: 4000, profit: 240 },
+    { name: 'Mar', volume: 3000, profit: 139 },
+    { name: 'Mie', volume: 6000, profit: 480 },
+    { name: 'Jue', volume: 2780, profit: 390 },
+    { name: 'Vie', volume: 8890, profit: 980 },
+    { name: 'Sab', volume: 2390, profit: 380 },
+    { name: 'Dom', volume: 3490, profit: 430 },
+  ]
+};
+
+const DEMO_CLIENTS = [
+  'Alejandro Magno', 'María Lionza', 'Pedro Camejo', 'Luisa Cáceres',
+  'Andrés Bello', 'Francisco Miranda', 'José Gregorio', 'Guaicaipuro', 'Negra Matea',
+  'Tío Simón', 'Carolina Herrera', 'Gustavo Dudamel'
+];
+
+const DEMO_OPERATORS = [
+  { id: 'op1', name: 'Camello Alpha', avatar: '🐫', color: 'bg-blue-100 text-blue-700' },
+  { id: 'op2', name: 'Camello Beta', avatar: '🐪', color: 'bg-green-100 text-green-700' },
+  { id: 'op3', name: 'Camello Gamma', avatar: '🐎', color: 'bg-purple-100 text-purple-700' },
+  { id: 'op4', name: 'Camello Delta', avatar: '🐫', color: 'bg-amber-100 text-amber-700' },
+];
+
+const DEMO_TRANSACTIONS = Array.from({ length: 15 }).map((_, i) => {
+  const type = Math.random() > 0.5 ? 'ENTRADA' : 'SALIDA';
+  let status = 'PENDIENTE';
+  if (type === 'ENTRADA') {
+    status = Math.random() > 0.4 ? 'Recibido' : 'Pendiente Recepción';
+  } else {
+    status = Math.random() > 0.4 ? 'Pagado' : 'En Revisión';
+  }
+
+  return {
+    id: `TX-DEMO-${1000 + i}`,
+    date: new Date(Date.now() - Math.floor(Math.random() * 100000000)).toLocaleString(),
+    amount: (Math.random() * 2000 + 50).toFixed(2),
+    currency: Math.random() > 0.5 ? 'USD' : 'USDT',
+    type,
+    status,
+    client: DEMO_CLIENTS[i % DEMO_CLIENTS.length],
+    operator: DEMO_OPERATORS[i % DEMO_OPERATORS.length].name,
+    rate: (48 + Math.random()).toFixed(2),
+    profit: (Math.random() * 50).toFixed(2),
+    ref: `REF-${Math.floor(Math.random() * 999999)}`,
+    clientBank: ['Zelle', 'Banesco', 'Mercantil', 'Binance'][Math.floor(Math.random() * 4)]
+  };
+});
+
+const DEMO_ADMIN_NOTICES = [
+  { id: 1, title: '⚠️ Mantenimiento Zelle', text: 'Zelle estará lento entre 2pm y 4pm hoy.', important: true },
+  { id: 2, title: '🚀 Bonificación', text: 'El operador con más volumen recibe bono el Viernes.', important: false },
+  { id: 3, title: 'Tasa BCV', text: 'Recuerden actualizar la tasa BCV en las notas de entrega.', important: false }
+];
+
+const DEMO_PERSONAL_NOTES = [
+  { id: 1, text: 'Llamar a Cliente VIP María para confirmar saldo pendiente.', done: false },
+  { id: 2, text: 'Verificar transacción REF-8821 que quedó colgada.', done: true },
+  { id: 3, text: 'Organizar comprobantes de la mañana.', done: false }
+];
+
+const DEMO_MESSAGES = [
+  { id: 1, sender: 'Admin', text: 'Recuerden reportar los cierres antes de las 5pm.', time: '10:30 AM', unread: true, avatar: '👑' },
+  { id: 2, sender: 'Camello Alpha', text: 'Tengo un cliente con un problema en Zelle, ¿puedes revisar?', time: '09:15 AM', unread: false, avatar: '🐫' },
+  { id: 3, sender: 'Soporte', text: 'El sistema estará en mantenimiento brevemente esta noche.', time: 'Ayer', unread: false, avatar: '🛠️' },
+  { id: 4, sender: 'Camello Beta', text: 'Listo el reporte de la mañana.', time: 'Ayer', unread: false, avatar: '🐪' }
+];
+
+// Helper Bank Styling
+const getBankStyle = (bankName: string) => {
+  const styles: Record<string, string> = {
+    'Zelle': 'bg-gradient-to-br from-purple-600 to-indigo-700 text-white border-purple-400',
+    'Chase': 'bg-gradient-to-br from-blue-800 to-blue-900 text-white border-blue-600',
+    'Banesco': 'bg-gradient-to-br from-green-600 to-green-800 text-white border-green-500',
+    'Banesco Panama': 'bg-gradient-to-br from-green-600 to-green-800 text-white border-green-500',
+    'PayPal': 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-blue-400',
+    'Binance': 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 text-black border-yellow-300',
+    'Mercantil': 'bg-gradient-to-br from-blue-600 to-orange-500 text-white border-orange-400',
+    'Banco de Venezuela': 'bg-gradient-to-br from-red-600 to-rose-700 text-white border-red-500',
+    'Swift': 'bg-gradient-to-br from-slate-600 to-slate-800 text-white border-slate-500',
+  };
+  return styles[bankName] || 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white border-slate-200';
+};
+
+const getBankIcon = (bankName: string) => {
+  if (bankName.includes('Binance')) return <svg className="w-5 h-5 text-current opacity-80" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V8h2v4zm6 2h-2v-4c0-1.1-.9-2-2-2h-3v-2h3c2.21 0 4 1.79 4 4v4z" /></svg>;
+  if (bankName.includes('Zelle')) return <span className="font-bold text-lg">Z</span>;
+  if (bankName.includes('PayPal')) return <span className="font-bold text-lg">P</span>;
+  if (bankName.includes('Venezuela')) return <span className="font-bold text-lg">BV</span>;
+  return <Icons.Wallet />;
+};
+
 // 2. Main Application Component
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [currentView, setCurrentView] = useState('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isTransactionModalOpen, setTransactionModalOpen] = useState(false);
   const [isSupportModalOpen, setSupportModalOpen] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [showScannerTutorial, setShowScannerTutorial] = useState(false);
+  const [chartType, setChartType] = useState<'line' | 'bar' | 'pie'>('line');
+  const [demoTransactions, setDemoTransactions] = useState<any[]>([]);
+
+  const SCANNER_TUTORIAL_STEPS: TutorialStep[] = [
+    {
+      title: 'Guía de Datos Cargados',
+      description: 'El Scanner IA ha detectado los datos del comprobante. Verificaremos campo por campo.',
+      target: '.form-type-selector',
+      position: 'right'
+    },
+    {
+      title: 'Monto Detectado',
+      description: 'Verifica que el monto coincida exactamente con la imagen del comprobante.',
+      target: '.form-amount-input',
+      position: 'top'
+    },
+    {
+      title: 'Cliente Nuevo',
+      description: 'Al ser un cliente nuevo, puedes editar su nombre si el escaneo tuvo algún error.',
+      target: '.form-client-input',
+      position: 'top'
+    },
+    {
+      title: 'Tasa de Cambio',
+      description: 'La tasa se carga automáticamente según el operador, pero puedes ajustarla si es una excepción.',
+      target: '.form-rate-input',
+      position: 'top'
+    },
+    {
+      title: 'Confirmación',
+      description: 'Si todo está correcto, guarda la transacción. En modo Demo, solo se guardará en memoria temporal.',
+    }
+  ];
+
+  // Check for stored session on mount
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('toro_auth');
+    if (storedAuth === 'true') {
+      setIsLoggedIn(true);
+      const storedDemo = localStorage.getItem('toro_is_demo');
+      if (storedDemo === 'true') {
+        setIsDemoMode(true);
+      }
+    }
+  }, []);
+
+  // Check for tutorial on mount/login
+  useEffect(() => {
+    if (isLoggedIn) {
+      const hasSeenTutorial = localStorage.getItem('hasSeenToroTutorial');
+      if (!hasSeenTutorial) {
+        setShowTutorial(true);
+      }
+    }
+  }, [isLoggedIn]);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggedIn(true);
+    localStorage.setItem('toro_auth', 'true');
+    // For real login, we might want to ensure demo mode is off
+    setIsDemoMode(false);
+    localStorage.removeItem('toro_is_demo');
+  };
+
+  const handleDemoLogin = () => {
+    setIsDemoMode(true);
+    setIsLoggedIn(true);
+    localStorage.setItem('toro_auth', 'true');
+    localStorage.setItem('toro_is_demo', 'true');
+    setShowTutorial(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('toro_auth');
+    localStorage.removeItem('toro_is_demo');
+    window.location.reload();
+  };
 
   // Smart Scanner Integration
   const [formData, setFormData] = useState({
@@ -279,6 +495,9 @@ const App = () => {
     }));
   };
 
+  const [selectedMessageId, setSelectedMessageId] = useState<number | null>(null);
+  const [selectedClient, setSelectedClient] = useState<any | null>(null);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -297,20 +516,39 @@ const App = () => {
     }
   }, [isDarkMode]);
 
-  // Login Handler
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoggedIn(true);
-  };
 
-  // Fetch Data from Backend
-  const { data: transactions, refetch: refetchTransactions } = useFetchData('/transactions/', []);
-  const { data: stats, refetch: refetchStats } = useFetchData('/stats/', { chart_data: [], ticker: { global_rate: "---", bcv_usd: "---", binance_buy: "---", binance_sell: "---", zelle: "---" }, volume: 0, net_profit: 0, pending_count: 0 });
+
+  // Fetch Data from Backend (or use Demo Data)
+  const { data: rawTransactions, refetch: refetchTransactions } = useFetchData('/transactions/', []);
+  const { data: rawStats, refetch: refetchStats } = useFetchData('/stats/', { chart_data: [], ticker: { global_rate: "---", bcv_usd: "---", binance_buy: "---", binance_sell: "---", zelle: "---" }, volume: 0, net_profit: 0, pending_count: 0 });
   const { data: clients } = useFetchData('/resources/clients', []);
   const { data: operators } = useFetchData('/resources/operators', []);
 
+  // Compute final display data
+  const stats = isDemoMode ? DEMO_STATS : rawStats;
+  const transactions = isDemoMode ? [...demoTransactions, ...DEMO_TRANSACTIONS] : rawTransactions;
+
   // Submit Transaction Handler
   const handleSubmitTransaction = async () => {
+    if (isDemoMode) {
+      // 1. Mock Save
+      const newTx = {
+        ...formData,
+        id: `DEMO-${Date.now()}`,
+        status: 'PENDIENTE',
+        date: new Date().toISOString(),
+        // Ensure numbers are numbers
+        amount: parseFloat(formData.amount) || 0,
+        rate: parseFloat(formData.rate) || 0,
+        commission: parseFloat(formData.commission) || 0
+      };
+      setDemoTransactions(prev => [newTx, ...prev]);
+      setTransactionModalOpen(false);
+      // Show success feedback
+      alert("Operación registrada en MODO DEMO (Temporal)");
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/transactions/`, {
         method: 'POST',
@@ -360,68 +598,101 @@ const App = () => {
   // --- LOGIN SCREEN ---
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-slate-200">
-          <div className="bg-brand-600 p-8 text-center relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white to-transparent"></div>
-            <div className="relative z-10 flex flex-col items-center">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-brand-600 mb-4 shadow-lg">
-                <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z" /></svg>
-              </div>
-              <h1 className="text-2xl font-bold text-white">TORO GROUP</h1>
-              <p className="text-blue-100 text-sm mt-1">Sistema de Gestión Financiera</p>
-            </div>
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="absolute top-4 right-4 text-white/70 hover:text-white"
-            >
-              {isDarkMode ? <Icons.Sun /> : <Icons.Moon />}
-            </button>
-          </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-black p-4 relative">
+        {/* Animated Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-0 w-full h-[300px] bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.15),transparent_50%)]"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-900/20 blur-[100px] rounded-full"></div>
+        </div>
 
-          <div className="p-8">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-slate-700">Usuario o Email</label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                    <Icons.Users />
+        <div className="relative w-full max-w-sm">
+          {/* Shiny Border Effect */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-purple-500 to-amber-400 rounded-2xl opacity-75 blur animate-pulse"></div>
+
+          <div className="relative bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-700/50">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-8 text-center relative overflow-hidden border-b border-white/5">
+              <div className="relative z-10 flex flex-col items-center">
+                {/* Logo Container */}
+                <div className="relative w-24 h-24 mb-4 group cursor-pointer">
+                  <div className="absolute inset-0 bg-amber-400/20 rounded-full blur-xl group-hover:bg-amber-400/30 transition-all duration-500"></div>
+                  <div className="relative w-full h-full bg-slate-950 rounded-full border-2 border-amber-500/50 p-1 shadow-lg shadow-amber-900/20 group-hover:scale-105 transition-transform duration-300">
+                    <img
+                      src="https://tg3-by-smart-bytes.onrender.com/static/logo.jpg"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = "https://ui-avatars.com/api/?name=TG&background=0f172a&color=f59e0b&size=200";
+                      }}
+                      alt="Toro Group"
+                      className="w-full h-full object-cover rounded-full"
+                    />
                   </div>
-                  <Input placeholder="Ingrese su usuario" className="pl-10" />
+                  {/* Shine */}
+                  <div className="absolute top-0 left-0 w-full h-full rounded-full bg-gradient-to-tr from-white/10 to-transparent pointer-events-none"></div>
                 </div>
-              </div>
 
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-slate-700">Contraseña</label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent tracking-tight">TORO GROUP</h1>
+                <p className="text-amber-400/80 text-xs font-bold tracking-widest mt-1 uppercase">Financial Services</p>
+              </div>
+            </div>
+
+            <div className="p-8 bg-slate-900/90 backdrop-blur-sm">
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Usuario</label>
+                  <div className="relative group">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-amber-400 transition-colors">
+                      <Icons.Users />
+                    </div>
+                    <Input placeholder="Ingrese su usuario" className="pl-10 bg-slate-950 border-slate-800 text-white placeholder-slate-600 focus:border-amber-500/50 focus:ring-amber-500/20" />
                   </div>
-                  <Input type="password" placeholder="••••••••" className="pl-10" />
-                  <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                    <Icons.Eye />
-                  </button>
                 </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Contraseña</label>
+                  <div className="relative group">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-amber-400 transition-colors">
+                      <Icons.Eye />
+                    </div>
+                    <Input type="password" placeholder="••••••••" className="pl-10 bg-slate-950 border-slate-800 text-white placeholder-slate-600 focus:border-amber-500/50 focus:ring-amber-500/20" />
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full justify-center bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 shadow-lg shadow-blue-900/30 border border-blue-500/30">
+                  Iniciar Sesión
+                </Button>
+              </form>
+
+              <div className="mt-6">
+                <div className="relative flex items-center py-2">
+                  <div className="flex-grow border-t border-slate-800"></div>
+                  <span className="flex-shrink-0 mx-4 text-xs text-slate-500 font-medium">O EXPLORA</span>
+                  <div className="flex-grow border-t border-slate-800"></div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleDemoLogin}
+                  className="w-full justify-center bg-transparent border border-amber-500/30 text-amber-500 hover:bg-amber-950/30 hover:text-amber-400 hover:border-amber-500/60 transition-all font-medium text-xs py-2.5 rounded-lg flex items-center"
+                >
+                  Modo Demo Interactivo ✨
+                </button>
               </div>
 
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="remember" className="rounded border-slate-300 text-brand-600 focus:ring-brand-500" />
-                <label htmlFor="remember" className="text-sm text-slate-600">Recordar mis datos</label>
-              </div>
+            </div>
 
-              <Button type="submit" className="w-full justify-center">
-                Iniciar Sesión <span className="ml-2">→</span>
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center text-sm space-y-2">
-              <a href="#" className="block text-slate-500 hover:text-brand-600">¿Olvidaste tu contraseña?</a>
-              <button className="text-brand-600 font-medium flex items-center justify-center gap-1 w-full hover:underline">
-                <Icons.Support /> Contactar Soporte Técnico
-              </button>
-              <p className="text-xs text-slate-400 mt-4">Powered by <span className="font-bold text-slate-500">SmartBytes.pf</span></p>
+            <div className="px-6 py-4 bg-slate-950 border-t border-slate-800 flex justify-between items-center text-[10px] text-slate-500">
+              <span>v2.5.0 Stable</span>
+              <span className="flex items-center gap-1"><Icons.Support /> Soporte 24/7</span>
             </div>
           </div>
+        </div>
+
+        {/* Footer Brillante - Estilo Firma */}
+        <div className="absolute bottom-6 select-none pointer-events-none flex flex-col items-center">
+          <span className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-light mb-0.5">Developed by</span>
+          <h1 className="text-xl md:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-100 to-amber-300 drop-shadow-[0_0_8px_rgba(234,179,8,0.6)]" style={{ fontFamily: '"Brush Script MT", "Segoe Script", cursive', fontStyle: 'italic' }}>
+            SmartBytes.PF
+          </h1>
         </div>
       </div>
     );
@@ -430,32 +701,41 @@ const App = () => {
   // --- MAIN APP ---
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+      {showTutorial && <Tutorial onComplete={() => { setShowTutorial(false); localStorage.setItem('hasSeenToroTutorial', 'true'); }} />}
+      {showScannerTutorial && <Tutorial steps={SCANNER_TUTORIAL_STEPS} onComplete={() => setShowScannerTutorial(false)} />}
 
       {/* SIDEBAR */}
-      <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20">
-        <div className="p-6 flex flex-col items-center border-b border-slate-800">
+      <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 relative overflow-hidden">
+        {/* Sidebar Background Gradient Decoration */}
+        <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none" />
+
+        <div className="p-6 flex flex-col items-center border-b border-slate-800 relative z-10">
           <div className="flex items-center gap-3 mb-1">
-            <div className="w-8 h-8 bg-brand-600 rounded-full flex items-center justify-center text-white">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5l-2.5 1.25L12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z" /></svg>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white relative group cursor-pointer overflow-hidden ring-2 ring-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+              <div className="absolute inset-0 bg-gradient-to-tr from-amber-600 to-yellow-400 group-hover:scale-110 transition-transform"></div>
+              <div className="relative z-10"><Icons.Toro /></div>
             </div>
             <div>
-              <h2 className="text-white font-bold text-lg leading-none">Toro Group</h2>
-              <p className="text-xs text-slate-500">Gestión Financiera</p>
+              <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-amber-100 font-bold text-lg leading-none">Toro Group</h2>
+              <p className="text-xs text-amber-500/80 font-medium tracking-wide">Gestión Financiera</p>
             </div>
           </div>
         </div>
 
-        <div className="p-4">
+        <div className="p-4 smart-scanner-section relative z-10">
           <button
             onClick={() => setTransactionModalOpen(true)}
-            className="w-full bg-brand-600 hover:bg-brand-700 text-white py-3 rounded-xl font-bold shadow-lg shadow-brand-900/50 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02]"
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-purple-900/50 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] scanner-button border border-purple-400/30 group relative overflow-hidden"
           >
-            <Icons.Scan /> Escanear / Nuevo
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
+            <Icons.Scan />
+            <span className="tracking-wide">Escanear / Nuevo</span>
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-2 space-y-1">
+        <nav className="flex-1 overflow-y-auto px-2 space-y-1 sidebar-navigation relative z-10 scrollbar-thin scrollbar-thumb-slate-800">
           <SidebarItem icon={<Icons.Dashboard />} label="Dashboard" active={currentView === 'dashboard'} onClick={() => setCurrentView('dashboard')} />
+          <SidebarItem icon={<Icons.Inbox />} label="Mensajes (Inbox)" active={currentView === 'inbox'} onClick={() => setCurrentView('inbox')} />
           <SidebarItem icon={<Icons.Transactions />} label="Transacciones" active={currentView === 'transactions'} onClick={() => setCurrentView('transactions')} />
           <SidebarItem icon={<Icons.Wallet />} label="Cuentas & Bancos" active={currentView === 'accounts'} onClick={() => setCurrentView('accounts')} />
           <SidebarItem icon={<Icons.Users />} label="Clientes" active={currentView === 'clients'} onClick={() => setCurrentView('clients')} />
@@ -465,15 +745,18 @@ const App = () => {
           <SidebarItem icon={<Icons.Reports />} label="Reportes" active={currentView === 'reports'} onClick={() => setCurrentView('reports')} />
         </nav>
 
-        <div className="p-4 bg-slate-900 border-t border-slate-800">
+        <div className="p-4 bg-slate-900/80 backdrop-blur-sm border-t border-slate-800 relative z-10">
           <button
             onClick={() => setSupportModalOpen(true)}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm text-slate-300 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm text-slate-300 transition-colors border border-transparent hover:border-slate-600"
           >
             <Icons.Support /> Soporte Técnico
           </button>
-          <div className="text-center mt-4">
-            <p className="text-[10px] text-slate-600 uppercase tracking-wider">Dev by SmartBytes.pf</p>
+          <div className="mt-6 select-none pointer-events-none flex flex-col items-center justify-center w-full pb-2">
+            <span className="text-[8px] text-slate-600 uppercase tracking-[0.3em] font-light mb-0.5">Developed by</span>
+            <h1 className="text-sm text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600 opacity-80" style={{ fontFamily: '"Brush Script MT", "Segoe Script", cursive', fontStyle: 'italic' }}>
+              SmartBytes.PF
+            </h1>
           </div>
         </div>
       </aside>
@@ -482,15 +765,17 @@ const App = () => {
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
 
         {/* TOP HEADER */}
-        <header className="bg-white dark:bg-slate-900 h-16 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-6 flex-shrink-0">
+        <header className="bg-white dark:bg-slate-900 h-16 border-b border-transparent flex items-center justify-between px-6 flex-shrink-0 relative">
+          <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
+
           <div>
-            <h1 className="text-xl font-bold text-slate-800 dark:text-white capitalize">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent capitalize drop-shadow-sm">
               {currentView === 'operators' ? 'Operadores' : currentView}
             </h1>
           </div>
 
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsDarkMode(!isDarkMode)} className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors">
+            <button onClick={() => setIsDarkMode(!isDarkMode)} className="text-slate-500 hover:text-amber-500 dark:text-slate-400 dark:hover:text-amber-400 transition-colors p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
               {isDarkMode ? <Icons.Sun /> : <Icons.Moon />}
             </button>
             <button className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition-colors relative">
@@ -498,7 +783,7 @@ const App = () => {
               <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
             </button>
             <div className="w-px h-8 bg-slate-200 dark:bg-slate-700 mx-2"></div>
-            <UserDropdown />
+            <UserDropdown onRestartTutorial={() => setShowTutorial(true)} onLogout={handleLogout} isDemoMode={isDemoMode} />
           </div>
         </header>
 
@@ -509,7 +794,7 @@ const App = () => {
           {currentView === 'dashboard' && (
             <div className="space-y-6">
               {/* Ticker */}
-              <div className="bg-slate-900 rounded-xl p-1 text-white flex items-center shadow-lg overflow-hidden">
+              <div className="bg-slate-900 rounded-xl p-1 text-white flex items-center shadow-lg overflow-hidden ticker-dashboard">
                 <div className="bg-brand-600 px-4 py-3 rounded-lg flex flex-col items-center min-w-[120px]">
                   <span className="text-xs opacity-80 flex items-center gap-2">
                     Tasa Promedio Global
@@ -550,7 +835,7 @@ const App = () => {
               </div>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 stats-cards">
                 <StatCard
                   title="Volumen Total"
                   value={`$${stats.volume}`}
@@ -578,24 +863,58 @@ const App = () => {
               <Card className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-bold text-slate-800 dark:text-white">Tendencia de Volumen vs Ganancia</h3>
-                  <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
-                    <button className="p-2 bg-white dark:bg-slate-600 rounded shadow-sm text-slate-800 dark:text-white"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></button>
-                    <button className="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg></button>
+                  <div className="flex bg-slate-100 dark:bg-slate-700 rounded-lg p-1 gap-1">
+                    <button onClick={() => setChartType('line')} className={`p-2 rounded shadow-sm transition-all ${chartType === 'line' ? 'bg-white dark:bg-slate-600 text-brand-600 dark:text-brand-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`} title="Líneas"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg></button>
+                    <button onClick={() => setChartType('bar')} className={`p-2 rounded shadow-sm transition-all ${chartType === 'bar' ? 'bg-white dark:bg-slate-600 text-brand-600 dark:text-brand-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`} title="Barras"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></button>
+                    <button onClick={() => setChartType('pie')} className={`p-2 rounded shadow-sm transition-all ${chartType === 'pie' ? 'bg-white dark:bg-slate-600 text-brand-600 dark:text-brand-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`} title="Circular"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg></button>
                   </div>
                 </div>
                 <div className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={stats.chart_data || []}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                        itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
-                      />
-                      <Line type="monotone" dataKey="volume" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} />
-                    </LineChart>
+                    {chartType === 'line' ? (
+                      <LineChart data={stats.chart_data || []}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                          itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                        />
+                        <Line type="monotone" dataKey="volume" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                        <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} />
+                      </LineChart>
+                    ) : chartType === 'bar' ? (
+                      <BarChart data={stats.chart_data || []}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                        <Tooltip
+                          cursor={{ fill: '#f1f5f9' }}
+                          contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                          itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+                        />
+                        <Bar dataKey="volume" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="profit" fill="#10b981" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    ) : (
+                      <PieChart>
+                        <Pie
+                          data={stats.chart_data || []}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="volume"
+                        >
+                          {(stats.chart_data || []).map((entry: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'][index % 5]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend verticalAlign="bottom" height={36} />
+                      </PieChart>
+                    )}
                   </ResponsiveContainer>
                 </div>
               </Card>
@@ -641,7 +960,7 @@ const App = () => {
                       <tr>
                         <th className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-400">FECHA / ID</th>
                         <th className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-400">REFERENCIA</th>
-                        <th className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-400">CLIENTE</th>
+                        <th className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-400">CLIENTE / BANCO</th>
                         <th className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-400">MONTO</th>
                         <th className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-400">OPERADOR</th>
                         <th className="px-6 py-4 font-semibold text-slate-600 dark:text-slate-400">TASA / GANANCIA</th>
@@ -650,41 +969,48 @@ const App = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                      {(transactions || []).map((tx: any) => (
-                        <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="text-slate-900 dark:text-white font-medium">{tx.date}</div>
-                            <div className="text-xs text-slate-500">{tx.id}</div>
-                          </td>
-                          <td className="px-6 py-4 text-slate-500 font-mono">{tx.ref}</td>
-                          <td className="px-6 py-4">
-                            <div className="font-bold text-slate-900 dark:text-white">{tx.client}</div>
-                            <div className="text-xs text-slate-500">{tx.clientBank}</div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <span className={`p-1 rounded ${tx.type === 'ENTRADA' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                {tx.type === 'ENTRADA' ? <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg> : <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>}
-                              </span>
-                              <span className="font-bold">{tx.amount} {tx.currency}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-bold">
-                                {tx.operator ? tx.operator.charAt(0) : '?'}
+                      {(isDemoMode ? DEMO_TRANSACTIONS : (transactions || [])).map((tx: any) => {
+                        const op = isDemoMode ? DEMO_OPERATORS.find(o => o.name === tx.operator) : null;
+                        return (
+                          <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="text-slate-900 dark:text-white font-medium">{(tx.date || '').split(',')[0]}</div>
+                              <div className="text-xs text-slate-500">{tx.id}</div>
+                            </td>
+                            <td className="px-6 py-4 text-slate-500 font-mono">{tx.ref}</td>
+                            <td className="px-6 py-4">
+                              <div className="font-bold text-slate-900 dark:text-white">{tx.client}</div>
+                              <div className={`text-[10px] inline-block px-1.5 py-0.5 rounded mt-1 font-medium border ${getBankStyle(tx.clientBank || 'Zelle')}`}>
+                                {tx.clientBank || 'N/A'}
                               </div>
-                              <span>{tx.operator}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-xs text-slate-500">Tasa: {tx.rate}</div>
-                            <div className="text-green-600 text-xs font-bold">+{tx.profit} USD</div>
-                          </td>
-                          <td className="px-6 py-4"><Badge status={tx.status} /></td>
-                          <td className="px-6 py-4 text-center text-slate-400">--</td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <span className={`p-1 rounded ${tx.type === 'ENTRADA' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                  {tx.type === 'ENTRADA' ? <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg> : <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>}
+                                </span>
+                                <span className="font-bold">{tx.amount} {tx.currency}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${op ? op.color : 'bg-slate-200 dark:bg-slate-700'}`}>
+                                  {op ? op.avatar : (tx.operator ? tx.operator.charAt(0) : '?')}
+                                </div>
+                                <span className="text-xs font-medium">{tx.operator}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="text-xs text-slate-500">Tasa: {tx.rate}</div>
+                              <div className="text-green-600 text-xs font-bold">+{tx.profit} USD</div>
+                            </td>
+                            <td className="px-6 py-4"><Badge status={tx.status} /></td>
+                            <td className="px-6 py-4 text-center text-slate-400">
+                              <button className="p-1 hover:text-brand-500 transition-colors"><Icons.Edit /></button>
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -699,53 +1025,72 @@ const App = () => {
                 <Button variant="secondary" icon={<Icons.Plus />}>Agregar Cuenta</Button>
               </div>
 
-              {/* International */}
+              {/* International & Crypto */}
               <div className="border-l-4 border-brand-500 pl-4 mb-4">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Bancos Internacionales & Crypto</h3>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white">Billeteras & Bancos Int.</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Card 1 */}
-                <Card className="p-6 relative overflow-hidden group">
-                  <div className="absolute top-4 right-4 bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-bold border border-blue-100">USD</div>
-                  <div className="mb-4 text-slate-400 group-hover:text-brand-500 transition-colors"><Icons.Wallet /></div>
-                  <h4 className="font-bold text-slate-900 dark:text-white">Banesco Panama</h4>
-                  <p className="text-xs text-slate-500 mb-6">1 Cuenta</p>
-                  <p className="text-xs text-slate-400 uppercase">Saldo Total</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">5,400.00 <span className="text-sm font-normal text-slate-500">USD</span></p>
-                </Card>
-                {/* Card 2 */}
-                <Card className="p-6 relative overflow-hidden group">
-                  <div className="absolute top-4 right-4 bg-green-50 text-green-600 px-2 py-1 rounded text-xs font-bold border border-green-100">USDT</div>
-                  <div className="mb-4 text-slate-400 group-hover:text-green-500 transition-colors"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="2" y="5" width="20" height="14" rx="2" /></svg></div>
-                  <h4 className="font-bold text-slate-900 dark:text-white">Binance</h4>
-                  <p className="text-xs text-slate-500 mb-6">1 Cuenta</p>
-                  <p className="text-xs text-slate-400 uppercase">Saldo Total</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">12,050.20 <span className="text-sm font-normal text-slate-500">USDT</span></p>
-                </Card>
-                {/* Card 3 */}
-                <Card className="p-6 relative overflow-hidden group">
-                  <div className="absolute top-4 right-4 bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-bold border border-blue-100">USD</div>
-                  <div className="mb-4 text-slate-400 group-hover:text-purple-500 transition-colors"><Icons.Wallet /></div>
-                  <h4 className="font-bold text-slate-900 dark:text-white">Zelle</h4>
-                  <p className="text-xs text-slate-500 mb-6">1 Cuenta</p>
-                  <p className="text-xs text-slate-400 uppercase">Saldo Total</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">3,200.00 <span className="text-sm font-normal text-slate-500">USD</span></p>
-                </Card>
+              <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                {[
+                  { name: 'Binance', type: 'USDT', balance: '14,250.80', count: 1 },
+                  { name: 'Zelle', type: 'USD', balance: '5,100.00', count: 3 },
+                  { name: 'Banesco Panama', type: 'USD', balance: '8,420.50', count: 1 },
+                  { name: 'Chase', type: 'USD', balance: '12,000.00', count: 1 },
+                  { name: 'PayPal', type: 'USD', balance: '1,240.00', count: 1 },
+                  { name: 'Mercantil', type: 'USD', balance: '3,500.00', count: 1 },
+                  { name: 'Swift', type: 'USD', balance: '25,000.00', count: 1 },
+                ].map((bank) => (
+                  <Card key={bank.name} className={`p-6 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 border-t-4 ${getBankStyle(bank.name).split(' ')[0].replace('bg-gradient-to-br', 'border-t-transparent')}`}>
+                    {/* Background Decoration */}
+                    <div className={`absolute inset-0 opacity-10 ${getBankStyle(bank.name)}`}></div>
+
+                    <div className="relative z-10">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className={`p-3 rounded-xl shadow-lg ${getBankStyle(bank.name)}`}>
+                          {getBankIcon(bank.name)}
+                        </div>
+                        <div className="bg-white/90 dark:bg-slate-900/90 text-slate-600 px-2 py-1 rounded text-[10px] font-bold border border-slate-200 shadow-sm">
+                          {bank.type}
+                        </div>
+                      </div>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-lg">{bank.name}</h4>
+                      <p className="text-xs text-slate-500 mb-6">{bank.count} Cuenta{bank.count > 1 ? 's' : ''}</p>
+                      <div className="border-t border-slate-200 dark:border-slate-700/50 pt-2">
+                        <p className="text-[10px] text-slate-400 uppercase tracking-wider">Saldo Total</p>
+                        <p className="text-xl font-bold text-slate-800 dark:text-white">{bank.balance} <span className="text-xs font-normal text-slate-500">{bank.type}</span></p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
 
               {/* National */}
               <div className="border-l-4 border-yellow-500 pl-4 mb-4 mt-8">
                 <h3 className="text-lg font-bold text-slate-800 dark:text-white">Bancos Nacionales (VES)</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="p-6 relative overflow-hidden group">
-                  <div className="absolute top-4 right-4 bg-yellow-50 text-yellow-600 px-2 py-1 rounded text-xs font-bold border border-yellow-100">VES</div>
-                  <div className="mb-4 text-slate-400 group-hover:text-yellow-600 transition-colors"><svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 21h18M5 21V7l8-4 8 4v14M8 21v-9a4 4 0 018 0v9" /></svg></div>
-                  <h4 className="font-bold text-slate-900 dark:text-white">Banco de Venezuela</h4>
-                  <p className="text-xs text-slate-500 mb-6">1 Cuenta</p>
-                  <p className="text-xs text-slate-400 uppercase">Saldo Total</p>
-                  <p className="text-2xl font-bold text-slate-900 dark:text-white">1,500.00 <span className="text-sm font-normal text-slate-500">VES</span></p>
-                </Card>
+              <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6">
+                {[
+                  { name: 'Banco de Venezuela', type: 'VES', balance: '45,200.00', count: 2 },
+                ].map((bank) => (
+                  <Card key={bank.name} className={`p-6 relative overflow-hidden group hover:-translate-y-1 transition-transform duration-300 border-t-4 border-red-500`}>
+                    <div className={`absolute inset-0 opacity-10 bg-red-600`}></div>
+                    <div className="relative z-10">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className={`p-3 rounded-xl shadow-lg bg-red-600 text-white`}>
+                          <span className="font-bold">BV</span>
+                        </div>
+                        <div className="bg-white/90 dark:bg-slate-900/90 text-yellow-600 px-2 py-1 rounded text-[10px] font-bold border border-yellow-200 shadow-sm">
+                          {bank.type}
+                        </div>
+                      </div>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-lg">{bank.name}</h4>
+                      <p className="text-xs text-slate-500 mb-6">{bank.count} Cuenta{bank.count > 1 ? 's' : ''}</p>
+                      <div className="border-t border-slate-200 dark:border-slate-700/50 pt-2">
+                        <p className="text-[10px] text-slate-400 uppercase tracking-wider">Saldo Total</p>
+                        <p className="text-xl font-bold text-slate-800 dark:text-white">{bank.balance} <span className="text-xs font-normal text-slate-500">{bank.type}</span></p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
@@ -765,8 +1110,18 @@ const App = () => {
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                  {(clients || []).map((client: any, idx: number) => (
-                    <div key={idx} className={`px-4 py-3 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 ${idx === 0 ? 'bg-blue-50 dark:bg-blue-900/10' : ''}`}>
+                  {((isDemoMode || !clients || clients.length === 0) ? DEMO_CLIENTS.map((name, i) => ({
+                    name,
+                    last: `${Math.floor(Math.random() * 24)}h ago`,
+                    id: `CLI-${i}`,
+                    volume: (Math.random() * 10000).toFixed(2),
+                    deals: Math.floor(Math.random() * 50)
+                  })) : clients).map((client: any, idx: number) => (
+                    <div
+                      key={idx}
+                      onClick={() => setSelectedClient(client)}
+                      className={`px-4 py-3 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors ${selectedClient?.id === client.id ? 'bg-blue-50 dark:bg-blue-900/20 shadow-inner' : ''}`}
+                    >
                       <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-600 dark:text-slate-300 text-sm">
                         {client.name ? client.name.substring(0, 2).toUpperCase() : '??'}
                       </div>
@@ -800,12 +1155,19 @@ const App = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {(operators || []).map((camello: any) => (
+                {((isDemoMode || !operators || operators.length === 0) ? DEMO_OPERATORS.map(op => ({
+                  ...op,
+                  location: 'Caracas, VE',
+                  last: 'Active Now',
+                  active: true,
+                  profit: (Math.random() * 500 + 100).toFixed(2),
+                  volume: (Math.random() * 5000 + 1000).toFixed(2)
+                })) : operators).map((camello: any) => (
                   <Card key={camello.id} className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-lg">
-                          {camello.name.charAt(0)}
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-sm ${camello.color || 'bg-slate-900 text-white'}`}>
+                          {camello.avatar || camello.name.charAt(0)}
                         </div>
                         <div>
                           <h3 className="font-bold text-slate-900 dark:text-white">{camello.name}</h3>
@@ -947,8 +1309,116 @@ const App = () => {
             </div>
           )}
 
+          {/* VIEW: INBOX */}
+          {currentView === 'inbox' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                    <Icons.Inbox /> Centro de Mensajes
+                  </h2>
+                  <p className="text-sm text-slate-500">Comunicación directa entre Admin y Operadores.</p>
+                </div>
+                <Button variant="primary" icon={<Icons.Plus />}>Nuevo Mensaje</Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[600px]">
+                {/* Message List */}
+                <Card className="col-span-1 border-r border-slate-200 dark:border-slate-700 flex flex-col h-full bg-white dark:bg-slate-900">
+                  <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+                    <div className="relative">
+                      <Icons.Search />
+                      <input type="text" placeholder="Buscar mensajes..." className="w-full pl-8 pr-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-500" />
+                      <div className="absolute left-2 top-2.5 text-slate-400 pointer-events-none"><span className="w-4 h-4 ml-1"></span></div>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto">
+                    {DEMO_MESSAGES.map((msg) => (
+                      <div
+                        key={msg.id}
+                        onClick={() => setSelectedMessageId(msg.id)}
+                        className={`p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors ${selectedMessageId === msg.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-brand-500' : (msg.unread ? 'bg-blue-50/30 dark:bg-blue-900/10' : '')}`}
+                      >
+                        <div className="flex justify-between items-start mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">{msg.avatar}</span>
+                            <span className={`font-bold text-sm ${msg.unread ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'}`}>{msg.sender}</span>
+                          </div>
+                          <span className="text-[10px] text-slate-400">{msg.time}</span>
+                        </div>
+                        <p className={`text-xs ${msg.unread ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-500'} line-clamp-2`}>{msg.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                {/* Chat Area */}
+                <Card className="col-span-1 md:col-span-2 flex flex-col h-full bg-slate-50 dark:bg-slate-950/50">
+                  {selectedMessageId ? (
+                    <div className="flex flex-col h-full">
+                      {/* Chat Header */}
+                      <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{DEMO_MESSAGES.find(m => m.id === selectedMessageId)?.avatar}</span>
+                          <div>
+                            <h3 className="font-bold text-slate-900 dark:text-white">{DEMO_MESSAGES.find(m => m.id === selectedMessageId)?.sender}</h3>
+                            <p className="text-xs text-green-500 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> En línea</p>
+                          </div>
+                        </div>
+                        <button className="text-slate-400 hover:text-slate-600"><Icons.Support /></button>
+                      </div>
+
+                      {/* Chat Messages */}
+                      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                        <div className="flex justify-center"><span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-full">Hoy</span></div>
+
+                        {/* Received Message */}
+                        <div className="flex gap-3">
+                          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-sm">{DEMO_MESSAGES.find(m => m.id === selectedMessageId)?.avatar}</div>
+                          <div className="bg-white dark:bg-slate-800 p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[80%]">
+                            <p className="text-sm text-slate-700 dark:text-slate-300">{DEMO_MESSAGES.find(m => m.id === selectedMessageId)?.text}</p>
+                            <span className="text-[10px] text-slate-400 mt-1 block text-right">{DEMO_MESSAGES.find(m => m.id === selectedMessageId)?.time}</span>
+                          </div>
+                        </div>
+
+                        {/* Sent Message (Mock) */}
+                        <div className="flex gap-3 flex-row-reverse">
+                          <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-sm text-brand-600 font-bold">Yo</div>
+                          <div className="bg-brand-600 text-white p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[80%]">
+                            <p className="text-sm">Entendido, lo revisaré de inmediato.</p>
+                            <span className="text-[10px] text-brand-200 mt-1 block text-right">Justo ahora</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Input Area */}
+                      <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700">
+                        <div className="flex gap-2">
+                          <button className="p-2 text-slate-400 hover:text-slate-600"><Icons.Plus /></button>
+                          <input type="text" placeholder="Escribe un mensaje..." className="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-all" />
+                          <button className="p-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg transition-colors"><Icons.Send /></button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
+                      <div className="w-16 h-16 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                        <Icons.Inbox />
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">Selecciona una conversación</h3>
+                      <p className="text-sm">O inicia un nuevo chat para coordinar operaciones.</p>
+                    </div>
+                  )}
+                  {/* Previous Placeholder was here, replaced by conditional rendering */}
+                </Card>
+              </div>
+            </div>
+          )}
+
         </div>
       </main>
+
+      {/* --- MODALS --- */}
 
       {/* --- MODALS --- */}
 
@@ -959,27 +1429,79 @@ const App = () => {
         title="Registrar Transacción"
         size="lg"
       >
-        <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex flex-col md:flex-row gap-6 relative">
+          {/* Local Tutorial Overlay for Scanner */}
+          {/* Local Tutorial Overlay for Scanner - MOVED TO ROOT */}
+
           {/* Scan Section */}
-          <div className="w-full md:w-1/3">
+          <div className="w-full md:w-1/3 flex flex-col gap-4">
             <SmartScanner onScanComplete={handleScanComplete} />
+            {isDemoMode && (
+              <div className="p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-200 dark:border-amber-800/30 animate-fade-in text-center">
+                <h4 className="text-sm font-bold text-amber-600 dark:text-amber-400 mb-2 flex items-center justify-center gap-1"><Icons.Camel /> Modo Demostración</h4>
+                <p className="text-[10px] text-slate-500 mb-3">Simula el reconocimiento IA de un comprobante y aprende a validar los datos.</p>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    // 1. Simulate Scan Data
+                    handleScanComplete({
+                      amount: 1250.00,
+                      currency: 'USD',
+                      reference_id: 'Ref-88772233',
+                      platform: 'ZELLE',
+                      raw_text_snippet: 'Zelle Payment Verified'
+                    });
+
+                    // 2. Auto-fill fields
+                    setFormData(prev => ({
+                      ...prev,
+                      client: 'Cliente Demo VIP',
+                      bankOrigin: 'Wells Fargo',
+                      notes: 'Comprobante procesado automáticamente por SmartScanner AI (Demo Mode)',
+                      operator: 'Camello Invitado' // Force operator
+                    }));
+
+                    // 3. Trigger Tutorial Guide
+                    setShowScannerTutorial(true);
+                  }}
+                  className="w-full border-amber-300 text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/30 dark:text-amber-400"
+                >
+                  <span className="mr-2">✨</span> Simular Carga & Guía
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Form Section */}
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 space-y-4 relative">
+            {/* Form Fields */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 uppercase">Tipo de Operación</label>
-                <select name="type" value={formData.type} onChange={handleInputChange} className="w-full p-2 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">
+                <select name="type" value={formData.type} onChange={handleInputChange} className="w-full p-2 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 outline-none transition-all form-type-selector">
                   <option value="ENTRADA">ENTRADA (Compra)</option>
                   <option value="SALIDA">SALIDA (Venta)</option>
                 </select>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 uppercase">Operador (Camello)</label>
-                <select name="operator" value={formData.operator} onChange={handleInputChange} className="w-full p-2 bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700">
-                  <option value="Camello_1">Camello_1</option>
-                  <option value="Camello 2">Camello 2</option>
+                <select
+                  name="operator"
+                  value={isDemoMode ? 'Camello Invitado' : formData.operator}
+                  onChange={handleInputChange}
+                  disabled={isDemoMode}
+                  className={`w-full p-2 rounded border border-slate-200 dark:border-slate-700 outline-none transition-all ${isDemoMode ? 'bg-amber-50 text-amber-600 border-amber-200 opacity-80 cursor-not-allowed font-bold' : 'bg-slate-100 dark:bg-slate-800'}`}
+                >
+                  {isDemoMode ? (
+                    <option value="Camello Invitado">Camello Invitado (Demo)</option>
+                  ) : (
+                    <>
+                      <option value="Camello_1">Camello_1</option>
+                      <option value="Camello 2">Camello 2</option>
+                    </>
+                  )}
                 </select>
               </div>
             </div>
@@ -992,20 +1514,20 @@ const App = () => {
                   <button className="text-xs text-brand-600 bg-blue-50 px-2 rounded hover:bg-blue-100"><Icons.Plus /> Nuevo</button>
                 </div>
               </div>
-              <Input name="client" value={formData.client} onChange={handleInputChange} placeholder="Nombre completo del nuevo cliente" />
+              <Input name="client" value={formData.client} onChange={handleInputChange} placeholder="Nombre completo del nuevo cliente" className="form-client-input" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 uppercase">Monto</label>
                 <div className="flex gap-2">
-                  <Input name="amount" type="number" value={formData.amount} onChange={handleInputChange} placeholder="0.00" className="flex-1" />
+                  <Input name="amount" type="number" value={formData.amount} onChange={handleInputChange} placeholder="0.00" className="flex-1 font-bold text-slate-800 dark:text-white form-amount-input" />
                   <select name="currency" value={formData.currency} onChange={handleInputChange} className="bg-slate-700 text-white rounded px-2 text-sm"><option value="VES">VES</option><option value="USD">USD</option></select>
                 </div>
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-500 uppercase">Tasa de Cambio</label>
-                <Input name="rate" type="number" value={formData.rate} onChange={handleInputChange} placeholder="36.00" />
+                <Input name="rate" type="number" value={formData.rate} onChange={handleInputChange} placeholder="36.00" className="form-rate-input" />
               </div>
             </div>
 
@@ -1048,7 +1570,7 @@ const App = () => {
                     className="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 cursor-pointer"
                   />
                   <label htmlFor="appliesBankFee" className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase cursor-pointer select-none">
-                    Aplcia Comisión Bancaria?
+                    Aplica Comisión Bancaria?
                   </label>
                 </div>
                 {formData.appliesBankFee && (
@@ -1102,7 +1624,9 @@ const App = () => {
 
             <div className="pt-4 flex justify-end gap-3">
               <Button variant="ghost" onClick={() => setTransactionModalOpen(false)}>Cancelar</Button>
-              <Button variant="primary" onClick={handleSubmitTransaction}>Guardar Transacción</Button>
+              <Button variant="primary" onClick={handleSubmitTransaction}>
+                {isDemoMode ? 'Guardar (Demo Temporales)' : 'Guardar Transacción'}
+              </Button>
             </div>
           </div>
         </div>
