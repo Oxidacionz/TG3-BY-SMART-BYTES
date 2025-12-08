@@ -1126,13 +1126,13 @@ const App = () => {
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                  {((isDemoMode || !clients || clients.length === 0) ? DEMO_CLIENTS.map((name, i) => ({
+                  {(isDemoMode ? DEMO_CLIENTS.map((name, i) => ({
                     name,
                     last: `${Math.floor(Math.random() * 24)}h ago`,
                     id: `CLI-${i}`,
                     volume: (Math.random() * 10000).toFixed(2),
                     deals: Math.floor(Math.random() * 50)
-                  })) : clients).map((client: any, idx: number) => (
+                  })) : (clients || [])).map((client: any, idx: number) => (
                     <div
                       key={idx}
                       onClick={() => setSelectedClient(client)}
@@ -1171,14 +1171,14 @@ const App = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {((isDemoMode || !operators || operators.length === 0) ? DEMO_OPERATORS.map(op => ({
+                {(isDemoMode ? DEMO_OPERATORS.map(op => ({
                   ...op,
                   location: 'Caracas, VE',
                   last: 'Active Now',
                   active: true,
                   profit: (Math.random() * 500 + 100).toFixed(2),
                   volume: (Math.random() * 5000 + 1000).toFixed(2)
-                })) : operators).map((camello: any) => (
+                })) : (operators || [])).map((camello: any) => (
                   <Card key={camello.id} className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3">
@@ -1349,7 +1349,7 @@ const App = () => {
                     </div>
                   </div>
                   <div className="flex-1 overflow-y-auto">
-                    {DEMO_MESSAGES.map((msg) => (
+                    {(isDemoMode ? DEMO_MESSAGES : []).map((msg) => (
                       <div
                         key={msg.id}
                         onClick={() => setSelectedMessageId(msg.id)}
