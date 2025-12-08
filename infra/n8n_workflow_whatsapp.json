@@ -1,0 +1,63 @@
+{
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "transaction-alert",
+                "options": {}
+            },
+            "name": "Webhook Transacción",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                460,
+                300
+            ],
+            "webhookId": "transaction-alert"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://waha:3000/api/sendText",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "chatId",
+                            "value": "584121234567@c.us"
+                        },
+                        {
+                            "name": "text",
+                            "value": "={{ '🔔 Nueva Transacción: ' + $json.body.data.amount + ' ' + $json.body.data.currency }}"
+                        },
+                        {
+                            "name": "session",
+                            "value": "default"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Enviar WhatsApp (WAHA)",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                680,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook Transacción": {
+            "main": [
+                [
+                    {
+                        "node": "Enviar WhatsApp (WAHA)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

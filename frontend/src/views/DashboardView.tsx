@@ -34,9 +34,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, chartType, 
                     onClick={onRefreshRates}
                     disabled={isRefreshingRates}
                     className={`ml-auto mr-2 p-1 rounded hover:bg-slate-800 transition-colors ${isRefreshingRates ? 'animate-spin text-amber-500' : 'text-slate-400'}`}
-                    title="Forzar actualización de tasass"
+                    title="Forzar actualización de tasas"
                 >
                     <Icons.Refresh />
+                </button>
+            </div>
+
+            {/* Test WhatsApp Button */}
+            <div className="flex justify-end">
+                <button
+                    onClick={() => import('../services/whatsappService').then(({ whatsappService }) => whatsappService.notifyTransaction({ amount: 'TEST 100', currency: 'USD' }))}
+                    className="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
+                >
+                    Test WhatsApp
                 </button>
             </div>
 

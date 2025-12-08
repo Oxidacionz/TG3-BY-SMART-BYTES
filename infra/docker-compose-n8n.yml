@@ -26,7 +26,9 @@ services:
       - "3000:3000"
     environment:
       - WHATSAPP_DEFAULT_ENGINE=WEBJS
-      - WHATSAPP_SWAGGER_ENABLED=true
+      - WAHA_DASHBOARD_USERNAME=admin
+      - WAHA_DASHBOARD_PASSWORD=admin
+      - WHATSAPP_API_KEY=123
 
 volumes:
   n8n_data:
