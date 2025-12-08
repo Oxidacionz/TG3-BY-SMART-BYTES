@@ -1,94 +1,86 @@
+# Manual de Integración: Sistema Automatizado de Comprobantes (WhatsApp + n8n + Python)
 
-# Manual de Integración Segura (Modo "Dual")
+Este documento detalla paso a paso cómo integrar la recepción de imágenes desde un grupo de WhatsApp, procesarlas automáticamente y enviarlas a tu backend para extracción de datos.
 
-Este método asegura que tu scraper siga funcionando para tu app antigua **sin interrupciones**, mientras envía una copia de los datos a Smart Bytes.
+## 🏗️ Arquitectura
+1. **WhatsApp (Origen):** Recibe la imagen del comprobante.
+2. **WAHA (WhatsApp API Local):** Un contenedor que "lee" tu WhatsApp y dispara eventos.
+3. **n8n (Orquestador):** Recibe el evento de WAHA, descarga la imagen y se la da a tu Backend.
+4. **Backend Python (Inteligencia):** Usa Tesseract (ya instalado) para leer el comprobante y devuelve los datos estructurados.
 
-## 1. Preparación en Railway
+---
 
-1.  Ve a tu proyecto Scraper en Railway.
-2.  Agrega las variables de entorno (Settings -> Variables):
-    - `SUPABASE_URL`: `https://kkkwfimgkemxwgvqvaob.supabase.co`
-    - `SUPABASE_SERVICE_KEY`: `(Tu clave service_role que empieza por eyJ...)`
-3.  Agrega `supabase` a tu `requirements.txt`.
+## 🚀 FASE 1: Instalación del Entorno (Infraestructura)
 
-## 2. Crear el "Puente" (Nuevo Archivo)
+Como nunca has usado n8n, vamos a usar **Docker Compose**. Esto descarga e instala todo automáticamente sin configurar bases de datos manualmente.
 
-En tu proyecto scraper, crea un archivo nuevo llamado `puente_smartbytes.py` y pega este código. Esto aísla la lógica nueva para no tocar tus scripts viejos.
+### Paso 1: Requisito Previo
+Asegúrate de tener **Docker Desktop** instalado y corriendo en tu Windows.
 
-```python
-import os
-from datetime import datetime
-from supabase import create_client
+### Paso 2: Ejecutar los Contenedores
+He creado el archivo `infra/docker-compose-n8n.yml` en tu proyecto.
+1. Abre una terminal en la carpeta `TG2`.
+2. Ejecuta el siguiente comando para encender n8n y WAHA:
+   ```powershell
+   docker-compose -f infra/docker-compose-n8n.yml up -d
+   ```
+3. Espera unos minutos.
 
-def sincronizar_con_smartbytes(precio_compra, precio_venta):
-    """
-    Envía los precios a Smart Bytes de forma silenciosa.
-    Si falla, NO rompe el flujo principal del scraper.
-    """
-    print("--- Iniciando sincronización con Smart Bytes ---")
-    
-    url = os.environ.get("SUPABASE_URL_TORO")
-    key = os.environ.get("SUPABASE_SERVICE_KEY_TORO")
+### Paso 3: Conectar tu WhatsApp
+1. Abre tu navegador en: `http://localhost:3000/dashboard` (Panel de WAHA).
+2. Verás un código QR (Scan QR).
+3. Abre WhatsApp en tu celular -> Dispositivos Vinculados -> Vincular Dispositivo.
+4. Escanea el código QR de la pantalla.
+   * ✅ **Resultado:** Ahora tu servidor local tiene control de tu WhatsApp.
 
-    if not url or not key:
-        print("⚠️ [SmartBytes] Saltando sincronización: Faltan credenciales _TORO.")
-        return
+---
 
-    try:
-        # Conexión
-        sb = create_client(url, key)
-        now = datetime.utcnow().isoformat()
-        
-        datos = []
-        
-        # Validación básica y preparación
-        if precio_compra and float(precio_compra) > 0:
-            datos.append({
-                "from_currency": "USDT", "to_currency": "VES",
-                "rate": float(precio_compra), "is_buy_rate": True, "captured_at": now
-            })
-            
-        if precio_venta and float(precio_venta) > 0:
-            datos.append({
-                "from_currency": "USDT", "to_currency": "VES",
-                "rate": float(precio_venta), "is_buy_rate": False, "captured_at": now
-            })
+## ⚡ FASE 2: Configuración de n8n (El Flujo)
 
-        # Envío
-        if datos:
-            sb.table("exchange_rates").insert(datos).execute()
-            print(f"✅ [SmartBytes] Datos enviados correctamente ({len(datos)} registros).")
-        else:
-            print("⚠️ [SmartBytes] No hubo datos válidos para enviar.")
+Ahora configuraremos el "cerebro".
 
-    except Exception as e:
-        # Capturamos CUALQUIER error para que tu app vieja no se detenga
-        print(f"❌ [SmartBytes] Error no crítico: {e}")
-    
-    print("----------------------------------------------")
-```
+1. Abre n8n en: `http://localhost:5678`.
+2. Sigue el setup inicial (crear usuario/contraseña local).
+3. **Importar el Flujo:**
+   En lugar de crear nodos uno por uno, copia este JSON (te lo daré en el siguiente bloque para que solo lo pegues) o sigue estos pasos lógicos:
 
-## 3. Conectar el Puente (Única modificación)
+   **Nodos del Flujo:**
+   1. **Webhook Node:** Escucha peticiones POST en `/webhook/whatsapp-message`.
+   2. **Switch/Filter:** 
+      * ¿Es una imagen? (`hasMedia == true`)
+      * ¿Viene del grupo correcto? (`chatId == "xxxx@g.us"`)
+   3. **HTTP Request (Descargar Imagen):** Pide la imagen a WAHA (`GET http://waha:3000/api/files/{id}`).
+   4. **HTTP Request (Enviar a Python):**
+      * URL: `http://host.docker.internal:8000/api/v1/scanner/`
+      * Method: `POST`
+      * Body: Multipart-Form-Data (File = Binary Data).
+   5. **Respuesta Python:** Recibes `{ "amount": 50, "bank": "Banesco" ... }`.
+   6. **HTTP Request (Responder WhatsApp):**
+      * Manda un mensaje al grupo: "✅ Detectado: Banesco - 50.00 USD".
 
-Ve a tu archivo principal (ej. `main.py` o `scraper.py`), busca donde obtienes los precios, e importa el puente.
+---
 
-```python
-# --- Al inicio del archivo ---
-from puente_smartbytes import sincronizar_con_smartbytes
+## 🔧 FASE 3: Conectar WAHA con n8n
 
-# ... (Todo tu código existente de scraping) ...
-# precios = obtener_precios_binance() 
-# guardar_en_mi_base_vieja(precios)  <-- ESTO SE QUEDA IGUAL
+Para que WAHA le avise a n8n cuando llega un mensaje:
 
-# --- AL FINAL, agrega solo esto ---
-# Suponiendo que tienes los precios en variables, pásalos a la función:
+1. Ve al Dashboard de WAHA (`http://localhost:3000`).
+2. Busca la configuración de **Webhooks**.
+3. URL del Webhook: `http://n8n:5678/webhook/whatsapp-message`
+4. Eventos a escuchar: `message.any` o `message` (depende de la versión).
 
-sincronizar_con_smartbytes(
-    precio_compra=mi_variable_precio_compra, 
-    precio_venta=mi_variable_precio_venta
-)
+---
 
-print("Ciclo terminado.")
-```
+## 🧪 Pruebas
 
-¡Listo! Con esto tu scraper servirá a dos señores sin conflicto.
+1. Asegúrate que tu Backend Python esté corriendo (`uvicorn app.main:app --reload`).
+2. Envía una foto de un comprobante al grupo de WhatsApp.
+3. Observa en n8n cómo se ilumina el flujo.
+4. El backend Python procesará la imagen y n8n enviará la respuesta.
+
+---
+
+## ⚠️ Notas Importantes para Windows
+
+* **Redes:** Desde dentro de Docker (n8n), tu máquina local NO es `localhost`, es `host.docker.internal`. Por eso verás esa dirección en las configuraciones.
+* **Backup:** Exporta tu flujo de n8n regularmente.

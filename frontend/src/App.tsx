@@ -1,4 +1,5 @@
 import React, { useState, useEffect, ReactNode } from 'react';
+import { User as UserIcon, Eye as EyeIcon, Sparkles, LifeBuoy } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { SmartScanner } from './components/SmartScanner';
 import { Tutorial, TutorialStep } from './components/Tutorial';
@@ -6,8 +7,6 @@ import { Tutorial, TutorialStep } from './components/Tutorial';
 /**
  * =================================================================================
  * ICONS (Atoms)
- * Inline SVGs to ensure 100% offline compatibility without external fonts/libraries
- * =================================================================================
  */
 const Icons = {
   Dashboard: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" /></svg>,
@@ -596,107 +595,124 @@ const App = () => {
   };
 
   // --- LOGIN SCREEN ---
+  // --- LOGIN SCREEN (New Design) ---
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-950 to-black p-4 relative">
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 left-0 w-full h-[300px] bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.15),transparent_50%)]"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-900/20 blur-[100px] rounded-full"></div>
-        </div>
+      // Asegúrate de guardar la imagen que descargaste en tu carpeta /public
+      // y llámala, por ejemplo, 'fondo-trading.png'
+      <div
+        className="min-h-screen w-full flex items-center justify-center relative overflow-hidden font-sans bg-cover bg-center"
+        style={{ backgroundImage: "url('/TG3-BY-SMART-BYTES/final_fused_bg.png')" }}
+      >
+        {/* Capa oscura encima para asegurar que el texto se lea bien.
+           Ajusta el 'opacity-60' según qué tan brillante quieras el fondo.
+        */}
+        <div className="absolute inset-0 bg-[#050b14] opacity-70 z-0"></div>
 
-        <div className="relative w-full max-w-sm">
-          {/* Shiny Border Effect */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-purple-500 to-amber-400 rounded-2xl opacity-75 blur animate-pulse"></div>
+        {/* --- MAIN CARD --- */}
+        <div className="relative z-10 w-full max-w-md p-[1px] rounded-3xl bg-gradient-to-b from-yellow-600/40 via-transparent to-yellow-600/40 shadow-2xl mt-12">
+          <div className="bg-[#0f172a]/90 backdrop-blur-xl rounded-3xl w-full h-full p-8 pt-16 border border-white/5 relative flex flex-col items-center">
 
-          <div className="relative bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-700/50">
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-8 text-center relative overflow-hidden border-b border-white/5">
-              <div className="relative z-10 flex flex-col items-center">
-                {/* Logo Container */}
-                <div className="relative w-24 h-24 mb-4 group cursor-pointer">
-                  <div className="absolute inset-0 bg-amber-400/20 rounded-full blur-xl group-hover:bg-amber-400/30 transition-all duration-500"></div>
-                  <div className="relative w-full h-full bg-slate-950 rounded-full border-2 border-amber-500/50 p-1 shadow-lg shadow-amber-900/20 group-hover:scale-105 transition-transform duration-300">
-                    <img
-                      src="https://tg3-by-smart-bytes.onrender.com/static/logo.jpg"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = "https://ui-avatars.com/api/?name=TG&background=0f172a&color=f59e0b&size=200";
-                      }}
-                      alt="Toro Group"
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  </div>
-                  {/* Shine */}
-                  <div className="absolute top-0 left-0 w-full h-full rounded-full bg-gradient-to-tr from-white/10 to-transparent pointer-events-none"></div>
-                </div>
-
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent tracking-tight">TORO GROUP</h1>
-                <p className="text-amber-400/80 text-xs font-bold tracking-widest mt-1 uppercase">Financial Services</p>
+            {/* --- LOGO (Overlapping Top) - ADJUSTED FOR REFERENCE IMAGE --- */}
+            <div className="absolute -top-20 z-20 p-1 rounded-full bg-gradient-to-b from-yellow-500/50 to-transparent">
+              <div className="w-36 h-36 rounded-full bg-slate-800 border-4 border-slate-900 overflow-hidden flex items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.4)]">
+                {/* Increased size (w-36 h-36) and negative top margin (-top-20) to overlap more */}
+                <img
+                  src="/TG3-BY-SMART-BYTES/gold_bull.png"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "https://kkkwfimgkemxwgvqvaob.supabase.co/storage/v1/object/public/assets/toro_logo.png";
+                  }}
+                  alt="Toro Logo"
+                  className="w-full h-full object-cover scale-[1.15]"
+                />
               </div>
             </div>
 
-            <div className="p-8 bg-slate-900/90 backdrop-blur-sm">
-              <form onSubmit={handleLogin} className="space-y-5">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Usuario</label>
-                  <div className="relative group">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-amber-400 transition-colors">
-                      <Icons.Users />
-                    </div>
-                    <Input placeholder="Ingrese su usuario" className="pl-10 bg-slate-950 border-slate-800 text-white placeholder-slate-600 focus:border-amber-500/50 focus:ring-amber-500/20" />
+            {/* Title Section */}
+            <div className="mt-10 mb-6 text-center">
+              <h1 className="text-3xl font-bold text-white tracking-wide drop-shadow-lg">TORO GROUP</h1>
+              <h2 className="text-yellow-500 text-sm font-semibold tracking-[0.2em] mt-2 border-b border-yellow-500/20 pb-2 inline-block">FINANCIAL SERVICES</h2>
+            </div>
+
+            {/* --- FORM --- */}
+            <form onSubmit={handleLogin} className="w-full space-y-5">
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-wider">Usuario</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 group-focus-within:text-yellow-500 transition-colors">
+                    <UserIcon size={20} />
                   </div>
+                  <input
+                    type="text"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-950/50 border border-slate-800 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent transition-all font-medium"
+                    placeholder="Ingrese su usuario"
+                  />
                 </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Contraseña</label>
-                  <div className="relative group">
-                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-amber-400 transition-colors">
-                      <Icons.Eye />
-                    </div>
-                    <Input type="password" placeholder="••••••••" className="pl-10 bg-slate-950 border-slate-800 text-white placeholder-slate-600 focus:border-amber-500/50 focus:ring-amber-500/20" />
-                  </div>
-                </div>
-
-                <Button type="submit" className="w-full justify-center bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 shadow-lg shadow-blue-900/30 border border-blue-500/30">
-                  Iniciar Sesión
-                </Button>
-              </form>
-
-              <div className="mt-6">
-                <div className="relative flex items-center py-2">
-                  <div className="flex-grow border-t border-slate-800"></div>
-                  <span className="flex-shrink-0 mx-4 text-xs text-slate-500 font-medium">O EXPLORA</span>
-                  <div className="flex-grow border-t border-slate-800"></div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleDemoLogin}
-                  className="w-full justify-center bg-transparent border border-amber-500/30 text-amber-500 hover:bg-amber-950/30 hover:text-amber-400 hover:border-amber-500/60 transition-all font-medium text-xs py-2.5 rounded-lg flex items-center"
-                >
-                  Modo Demo Interactivo ✨
-                </button>
               </div>
 
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-wider">Contraseña</label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 group-focus-within:text-yellow-500 transition-colors">
+                    <EyeIcon size={20} />
+                  </div>
+                  <input
+                    type="password"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-950/50 border border-slate-800 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-transparent transition-all font-bold tracking-widest"
+                    placeholder="........"
+                  />
+                </div>
+              </div>
+
+              <button type="submit" className="w-full py-3.5 mt-4 bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-blue-900/40 transition-all transform hover:scale-[1.02] active:scale-[0.98] border border-blue-500/30">
+                Iniciar Sesión
+              </button>
+
+              <div className="relative flex items-center py-2">
+                <div className="flex-grow border-t border-slate-700/50"></div>
+                <span className="flex-shrink-0 mx-4 text-[10px] text-slate-500 uppercase tracking-widest">O explora</span>
+                <div className="flex-grow border-t border-slate-700/50"></div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                className="w-full py-3 border border-yellow-500/20 hover:bg-yellow-500/10 text-yellow-500 font-semibold rounded-xl flex items-center justify-center gap-2 transition-all group backdrop-blur-sm"
+              >
+                Modo Demo Interactivo
+                <Sparkles size={16} className="text-yellow-400 group-hover:animate-pulse" />
+              </button>
+
+            </form>
+
+            {/* --- FOOTER --- */}
+            <div className="mt-8 w-full border-t border-slate-800/50 pt-4 flex flex-col items-center">
+              <div className="w-full flex justify-between items-center text-[10px] text-slate-500 mb-2 px-2">
+                <span>v2.5.0 Stable</span>
+                <div className="flex items-center gap-1 opacity-70 hover:opacity-100 cursor-pointer transition-opacity">
+                  <LifeBuoy size={10} />
+                  <span>Soporte 24/7</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center justify-center opacity-60 hover:opacity-90 transition-opacity duration-500">
+                <span className="text-[9px] text-slate-600 uppercase tracking-[0.2em] mb-1">Developed By</span>
+                <span className="font-serif italic text-yellow-500/80 text-lg tracking-wide" style={{ fontFamily: 'serif' }}>
+                  SmartBytes.PF
+                </span>
+              </div>
             </div>
 
-            <div className="px-6 py-4 bg-slate-950 border-t border-slate-800 flex justify-between items-center text-[10px] text-slate-500">
-              <span>v2.5.0 Stable</span>
-              <span className="flex items-center gap-1"><Icons.Support /> Soporte 24/7</span>
-            </div>
           </div>
-        </div>
-
-        {/* Footer Brillante - Estilo Firma */}
-        <div className="absolute bottom-6 select-none pointer-events-none flex flex-col items-center">
-          <span className="text-[10px] text-slate-500 uppercase tracking-[0.3em] font-light mb-0.5">Developed by</span>
-          <h1 className="text-xl md:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-100 to-amber-300 drop-shadow-[0_0_8px_rgba(234,179,8,0.6)]" style={{ fontFamily: '"Brush Script MT", "Segoe Script", cursive', fontStyle: 'italic' }}>
-            SmartBytes.PF
-          </h1>
         </div>
       </div>
     );
   }
+
+
+
 
   // --- MAIN APP ---
   return (
