@@ -30,7 +30,7 @@ services:
       - WAHA_DASHBOARD_PASSWORD=admin
       - WHATSAPP_API_KEY=123
       - WHATSAPP_HOOK_URL=http://n8n:5678/webhook/whatsapp
-      - WHATSAPP_HOOK_EVENTS=message.create
+      - WHATSAPP_HOOK_EVENTS=message
     volumes:
       - waha_data:/app/.waha
 

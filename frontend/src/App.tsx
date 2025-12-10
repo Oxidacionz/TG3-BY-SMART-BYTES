@@ -1,7 +1,8 @@
 import React, { useState, useEffect, ReactNode } from 'react';
-import { User as UserIcon, Eye as EyeIcon, Sparkles, LifeBuoy } from 'lucide-react';
+import { User as UserIcon, Eye as EyeIcon, Sparkles, LifeBuoy, Menu } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { SmartScanner } from './components/SmartScanner';
+import { WhatsAppConnect } from './components/WhatsAppConnect';
 import { Tutorial, TutorialStep } from './components/Tutorial';
 
 // START REFACTOR: Imports from SRP Modules
@@ -132,6 +133,7 @@ const App = () => {
   const [showScannerTutorial, setShowScannerTutorial] = useState(false);
   const [chartType, setChartType] = useState<'line' | 'bar' | 'pie'>('line');
   const [demoTransactions, setDemoTransactions] = useState<any[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const SCANNER_TUTORIAL_STEPS: TutorialStep[] = [
     {
@@ -464,12 +466,31 @@ const App = () => {
       {showTutorial && <Tutorial onComplete={() => { setShowTutorial(false); localStorage.setItem('hasSeenToroTutorial', 'true'); }} />}
       {showScannerTutorial && <Tutorial steps={SCANNER_TUTORIAL_STEPS} onComplete={() => setShowScannerTutorial(false)} />}
 
+      {/* MOBILE OVERLAY */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-20 md:hidden glass"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* SIDEBAR */}
-      <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-20 relative overflow-hidden">
+      <aside className={`
+        fixed inset-y-0 left-0 w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 z-30 transition-transform duration-300 ease-in-out md:static md:translate-x-0
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
         {/* Sidebar Background Gradient Decoration */}
         <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-purple-900/20 to-transparent pointer-events-none" />
 
         <div className="p-6 flex flex-col items-center border-b border-slate-800 relative z-10">
+          {/* Mobile Close Button (Optional visually, but good for UX) */}
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="absolute top-4 right-4 text-slate-500 hover:text-white md:hidden"
+          >
+            <Icons.Close />
+          </button>
+
           <div className="flex items-center gap-3 mb-1">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-white relative group cursor-pointer overflow-hidden ring-2 ring-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]">
               <div className="absolute inset-0 bg-gradient-to-tr from-amber-600 to-yellow-400 group-hover:scale-110 transition-transform"></div>
@@ -484,7 +505,7 @@ const App = () => {
 
         <div className="p-4 smart-scanner-section relative z-10">
           <button
-            onClick={() => setTransactionModalOpen(true)}
+            onClick={() => { setTransactionModalOpen(true); setIsMobileMenuOpen(false); }}
             className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-purple-900/50 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] scanner-button border border-purple-400/30 group relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
@@ -494,20 +515,21 @@ const App = () => {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2 space-y-1 sidebar-navigation relative z-10 scrollbar-thin scrollbar-thumb-slate-800">
-          <SidebarItem icon={<Icons.Dashboard />} label="Dashboard" active={currentView === 'dashboard'} onClick={() => setCurrentView('dashboard')} />
-          <SidebarItem icon={<Icons.Inbox />} label="Mensajes (Inbox)" active={currentView === 'inbox'} onClick={() => setCurrentView('inbox')} />
-          <SidebarItem icon={<Icons.Transactions />} label="Transacciones" active={currentView === 'transactions'} onClick={() => setCurrentView('transactions')} />
-          <SidebarItem icon={<Icons.Wallet />} label="Cuentas & Bancos" active={currentView === 'accounts'} onClick={() => setCurrentView('accounts')} />
-          <SidebarItem icon={<Icons.Users />} label="Clientes" active={currentView === 'clients'} onClick={() => setCurrentView('clients')} />
-          <SidebarItem icon={<Icons.Camellos />} label="Camellos" active={currentView === 'operators'} onClick={() => setCurrentView('operators')} />
-          <SidebarItem icon={<Icons.Notes />} label="Notas" active={currentView === 'notes'} onClick={() => setCurrentView('notes')} />
-          <SidebarItem icon={<Icons.Expenses />} label="Gastos" active={currentView === 'expenses'} onClick={() => setCurrentView('expenses')} />
-          <SidebarItem icon={<Icons.Reports />} label="Reportes" active={currentView === 'reports'} onClick={() => setCurrentView('reports')} />
+          <SidebarItem icon={<Icons.Dashboard />} label="Dashboard" active={currentView === 'dashboard'} onClick={() => { setCurrentView('dashboard'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon={<Icons.Inbox />} label="Mensajes (Inbox)" active={currentView === 'inbox'} onClick={() => { setCurrentView('inbox'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon={<Icons.Transactions />} label="Transacciones" active={currentView === 'transactions'} onClick={() => { setCurrentView('transactions'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon={<Icons.Wallet />} label="Cuentas & Bancos" active={currentView === 'accounts'} onClick={() => { setCurrentView('accounts'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon={<Icons.Users />} label="Clientes" active={currentView === 'clients'} onClick={() => { setCurrentView('clients'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon={<Icons.Camellos />} label="Camellos" active={currentView === 'operators'} onClick={() => { setCurrentView('operators'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon={<Icons.Notes />} label="Notas" active={currentView === 'notes'} onClick={() => { setCurrentView('notes'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon={<Icons.Expenses />} label="Gastos" active={currentView === 'expenses'} onClick={() => { setCurrentView('expenses'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon={<Icons.Reports />} label="Reportes" active={currentView === 'reports'} onClick={() => { setCurrentView('reports'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon={<Icons.WhatsApp />} label="WhatsApp Bot" active={currentView === 'whatsapp'} onClick={() => { setCurrentView('whatsapp'); setIsMobileMenuOpen(false); }} />
         </nav>
 
         <div className="p-4 bg-slate-900/80 backdrop-blur-sm border-t border-slate-800 relative z-10">
           <button
-            onClick={() => setSupportModalOpen(true)}
+            onClick={() => { setSupportModalOpen(true); setIsMobileMenuOpen(false); }}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm text-slate-300 transition-colors border border-transparent hover:border-slate-600"
           >
             <Icons.Support /> Soporte Técnico
@@ -528,8 +550,16 @@ const App = () => {
         <header className="bg-white dark:bg-slate-900 h-16 border-b border-transparent flex items-center justify-between px-6 flex-shrink-0 relative">
           <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
 
-          <div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent capitalize drop-shadow-sm">
+          <div className="flex items-center gap-3">
+            {/* Hamburger Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 -ml-2 mr-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg md:hidden"
+            >
+              <Menu size={24} />
+            </button>
+
+            <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent capitalize drop-shadow-sm truncate max-w-[200px] md:max-w-none">
               {currentView === 'operators' ? 'Operadores' : currentView}
             </h1>
           </div>
@@ -594,12 +624,23 @@ const App = () => {
 
           {currentView === 'reports' && <ReportsView />}
 
+
           {currentView === 'inbox' && (
             <InboxView
               isDemoMode={isDemoMode}
               demoMessages={DEMO_MESSAGES}
             />
           )}
+
+          {currentView === 'whatsapp' && (
+            <div className="space-y-6">
+              <Card className="p-6">
+                <h2 className="text-xl font-bold mb-4 text-slate-800 dark:text-white">Conexión de WhatsApp Bot</h2>
+                <WhatsAppConnect />
+              </Card>
+            </div>
+          )}
+
 
         </div>
       </main>

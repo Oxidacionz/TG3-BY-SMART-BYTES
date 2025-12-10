@@ -2,10 +2,9 @@ import React, { ReactNode } from 'react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Card } from '../components/ui/Card';
 import { Icons } from '../components/ui/Icons';
-
 import { StatCard } from '../components/ui/StatCard';
-
 import { Stats } from '../types';
+
 
 interface DashboardViewProps {
     stats: Stats;
@@ -40,15 +39,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, chartType, 
                 </button>
             </div>
 
-            {/* Test WhatsApp Button */}
-            <div className="flex justify-end">
-                <button
-                    onClick={() => import('../services/whatsappService').then(({ whatsappService }) => whatsappService.notifyTransaction({ amount: 'TEST 100', currency: 'USD' }))}
-                    className="text-xs bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition"
-                >
-                    Test WhatsApp
-                </button>
-            </div>
+
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard title="Volumen Total" value={`${stats?.volume || '0.00'}`} subtext="+12% vs mes pasado" icon={<Icons.Transactions />} color="blue" />
@@ -120,23 +111,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, chartType, 
                     </div>
                 </Card>
 
-                {/* Recent Activity / Mini Feed */}
-                <Card className="p-6 flex flex-col">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Actividad Reciente</h3>
-                    <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-                        {[1, 2, 3, 4, 5].map((_, i) => (
-                            <div key={i} className="flex gap-3 items-start pb-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs text-white ${['bg-green-500', 'bg-blue-500', 'bg-amber-500'][i % 3]}`}>
-                                    <Icons.Transactions />
+                {/* Right Sidebar: Activity */}
+                <div className="space-y-6">
+                    <Card className="p-6 flex flex-col h-full">
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Actividad Reciente</h3>
+                        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                            {[1, 2, 3, 4, 5].map((_, i) => (
+                                <div key={i} className="flex gap-3 items-start pb-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs text-white ${['bg-green-500', 'bg-blue-500', 'bg-amber-500'][i % 3]}`}>
+                                        <Icons.Transactions />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-slate-800 dark:text-white">Nueva transacción <span className="font-bold">+{100 * (i + 1)} USD</span></p>
+                                        <p className="text-xs text-slate-400">Hace {5 * (i + 1)} min • Zelle</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-medium text-slate-800 dark:text-white">Nueva transacción <span className="font-bold">+{100 * (i + 1)} USD</span></p>
-                                    <p className="text-xs text-slate-400">Hace {5 * (i + 1)} min • Zelle</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </Card>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
             </div>
         </div>
     );
