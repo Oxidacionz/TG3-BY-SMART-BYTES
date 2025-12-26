@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # 1. n8n (El "Cerebro" de automatización)
+  n8n:
+    image: n8nio/n8n
+    container_name: n8n-automation
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+    volumes:
+      - n8n_data:/home/node/.n8n
+
+  # 2. WAHA (WhatsApp HTTP API - El "Conector" de WhatsApp)
+  # Esta herramienta levanta un navegador oculto y te da una API local
+  waha:
+    image: devlikeapro/waha
+    container_name: waha-whatsapp
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - WHATSAPP_DEFAULT_ENGINE=WEBJS
+      - WAHA_DASHBOARD_USERNAME=admin
+      - WAHA_DASHBOARD_PASSWORD=admin
+      - WHATSAPP_API_KEY=123
+      - WHATSAPP_HOOK_URL=http://n8n:5678/webhook/whatsapp
+      - WHATSAPP_HOOK_EVENTS=message
+    volumes:
+      - waha_data:/app/.waha
+
+volumes:
+  n8n_data:
+  waha_data:

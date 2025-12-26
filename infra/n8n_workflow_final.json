@@ -1,0 +1,166 @@
+{
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "transaction-alert",
+                "options": {}
+            },
+            "name": "Webhook APP (Salida)",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                460,
+                300
+            ],
+            "webhookId": "transaction-alert"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://waha:3000/api/sendText",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "chatId",
+                            "value": "584121234567@c.us"
+                        },
+                        {
+                            "name": "text",
+                            "value": "={{ '🔔 Nueva Transacción: ' + $json.body.data.amount + ' ' + $json.body.data.currency }}"
+                        },
+                        {
+                            "name": "session",
+                            "value": "default"
+                        }
+                    ]
+                },
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "X-Api-Key",
+                            "value": "123"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Enviar Alerta WhatsApp",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                700,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "whatsapp",
+                "options": {}
+            },
+            "name": "Webhook WhatsApp (Entrada)",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                460,
+                540
+            ],
+            "webhookId": "whatsapp"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "boolean": [
+                        {
+                            "value1": "={{ $json.body.payload.hasMedia }}",
+                            "value2": true
+                        }
+                    ]
+                }
+            },
+            "name": "Es Comprobante? (Imagen)",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 1,
+            "position": [
+                700,
+                540
+            ]
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "http://waha:3000/api/sendText",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "chatId",
+                            "value": "={{ $json.body.payload.from }}"
+                        },
+                        {
+                            "name": "text",
+                            "value": "🤖 He recibido tu comprobante. Procesando..."
+                        },
+                        {
+                            "name": "session",
+                            "value": "default"
+                        }
+                    ]
+                },
+                "headerParameters": {
+                    "parameters": [
+                        {
+                            "name": "X-Api-Key",
+                            "value": "123"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "name": "Responder Recibido",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 3,
+            "position": [
+                940,
+                520
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook APP (Salida)": {
+            "main": [
+                [
+                    {
+                        "node": "Enviar Alerta WhatsApp",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook WhatsApp (Entrada)": {
+            "main": [
+                [
+                    {
+                        "node": "Es Comprobante? (Imagen)",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Es Comprobante? (Imagen)": {
+            "main": [
+                [
+                    {
+                        "node": "Responder Recibido",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

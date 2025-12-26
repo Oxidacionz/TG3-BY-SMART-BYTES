@@ -1,0 +1,12 @@
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from app.core.config import settings
+
+# Initialize Limiter
+# key_func=get_remote_address uses the client's IP address as the identifier
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[settings.RATE_LIMIT_DEFAULT] if settings.RATE_LIMIT_ENABLED else [],
+    enabled=settings.RATE_LIMIT_ENABLED,
+    headers_enabled=True
+)
