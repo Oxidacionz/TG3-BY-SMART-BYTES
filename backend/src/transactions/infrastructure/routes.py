@@ -21,3 +21,10 @@ async def create_transaction(transaction: Transaction):
         return await transaction_repo.save(transaction)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/client/{client_id}", response_model=List[Transaction])
+async def get_client_transactions(client_id: str):
+    """
+    Get transactions specific to a client (Ledger).
+    """
+    return await transaction_repo.get_by_client(client_id)

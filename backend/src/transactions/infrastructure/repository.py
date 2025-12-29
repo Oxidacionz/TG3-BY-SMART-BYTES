@@ -248,6 +248,34 @@ class TransactionRepository:
             logger.error(f"Error fetching stats from SQLite: {e}")
             return {}
 
+    async def get_by_client(self, client_identifier: str) -> List[Transaction]:
+        """Fetch transactions for a specific client (by ID or Name)"""
+        try:
+            db = SessionLocal()
+            # Search by exact Client ID OR Fuzzy Name match in sender/receiver
+            search = f"%{client_identifier}%"
+            sql_txs = db.query(TransactionModel).filter(
+                (TransactionModel.client_id == client_identifier) | 
+                (TransactionModel.sender_name.ilike(search)) |
+                (TransactionModel.receiver_name.ilike(search))
+            ).order_by(TransactionModel.created_at.desc()).all()
+            
+            transactions = []
+            for sql_tx in sql_txs:
+                try:
+                    t_dict = sql_tx.to_dict()
+                    if 'transaction_type' not in t_dict and 'type' in t_dict:
+                        t_dict['transaction_type'] = t_dict.pop('type')
+                    transactions.append(Transaction(**t_dict))
+                except Exception as e:
+                    logger.warning(f"Skipping tx {sql_tx.id}: {e}")
+            
+            db.close()
+            return transactions
+        except Exception as e:
+            logger.error(f"Error fetching client txs: {e}")
+            return []
+
 # Singleton
 transaction_repo = TransactionRepository()
 

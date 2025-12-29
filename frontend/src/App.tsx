@@ -60,6 +60,7 @@ const App = () => {
       {currentView === 'expenses' && <ExpensesView />}
       {currentView === 'reports' && <ReportsView />}
       {currentView === 'inbox' && <InboxView isDemoMode={isDemoMode} demoMessages={DEMO_MESSAGES} />}
+
       {currentView === 'whatsapp' && <Card className="p-6"><h2 className="text-xl font-bold mb-4 dark:text-white">Conexión de WhatsApp</h2><WhatsAppConnect /></Card>}
 
       <DashboardModals

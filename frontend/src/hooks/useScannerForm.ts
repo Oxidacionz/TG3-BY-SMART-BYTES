@@ -3,20 +3,28 @@ import { validateGeminiResponse } from '../types/schemas';
 
 export const useScannerForm = () => {
     const initialFormState = {
-        type: 'ENTRADA',
+        type: 'NEUTRO',
+        category: 'CAMBIO_DIVISA',
+        status: 'PENDING',
         operator: 'Camello_1',
         client: '',
         clientDocId: '',
         amount: '',
         currency: 'USD',
         rate: '36.00',
+        marketRate: '', // New field for spread calc
+        profit: '', // New field for estimated profit
+        manualExitAmount: '', // New field for explicit exit amount
+        exitCurrency: 'VES', // New field for exit currency
         commission: '',
         receivingAccount: '',
         bankOrigin: '',
         reference: '',
         notes: '',
         appliesBankFee: false,
-        bankFeePercentage: '0.30'
+        bankFeePercentage: '0.30',
+        relatedTransactionId: '',
+        amountUSD: ''
     };
 
     const [formData, setFormData] = useState(initialFormState);
@@ -27,19 +35,42 @@ export const useScannerForm = () => {
         setFormData(prev => {
             const newData = { ...prev, [name]: value };
 
-            // Auto-calculate 3% commission for National Interbank Outgoing Trasnfers
-            if (name === 'type' && value === 'SALIDA') {
-                const isNational = ['VES', 'Bs', 'Bolivares'].includes(newData.currency); // Simple check
-                const isInterbank = newData.bankOrigin && newData.receivingAccount &&
-                    !newData.bankOrigin.toLowerCase().includes(newData.receivingAccount.toLowerCase()) &&
-                    !newData.receivingAccount.toLowerCase().includes(newData.bankOrigin.toLowerCase());
+            // Auto-set Type based on Category
+            if (name === 'category') {
+                const cat = value;
+                if (['VENTA', 'COBRO_DEUDA', 'INYECCION_CAPITAL'].includes(cat)) newData.type = 'ENTRADA';
+                if (['GASTO_OPERATIVO', 'PAGO_PROVEEDOR', 'NOMINA', 'RETIRO_CAPITAL'].includes(cat)) newData.type = 'SALIDA';
+                if (['CAMBIO_DIVISA', 'TRANSFERENCIA_INTERNA'].includes(cat)) newData.type = 'NEUTRO';
+            }
 
-                if (isNational && isInterbank) {
-                    const amount = parseFloat(newData.amount || '0');
-                    newData.appliesBankFee = true;
-                    newData.commission = (amount * 0.03).toFixed(2);
+            // Auto-calculate amounts & Profit
+            if (['amount', 'rate', 'currency', 'marketRate', 'category'].includes(name)) {
+                const amt = parseFloat(newData.amount || '0');
+                const rate = parseFloat(newData.rate || '0');
+                const mRate = parseFloat(newData.marketRate || '0');
+
+                if (amt && rate) {
+                    newData.amountUSD = (newData.currency === 'USD' || newData.currency === 'USDT')
+                        ? String(amt)
+                        : (amt / rate).toFixed(2);
+
+                    // Default Exit Amount (if not set manually later)
+                    // Note: manualExitAmount is separate state, if empty we might show calculated in UI
+                }
+
+                if (amt && rate && mRate && newData.category === 'CAMBIO_DIVISA') {
+                    // Spread Profit Calculation
+                    // Profit = (Amount * OperationRate) - (Amount * MarketRate) if selling USD
+                    // Simplified: Profit = Amount * (OpRate - MarketRate) (Logic depends on direction)
+                    // Assuming standard: Buying USD (Client gives VES, gets USD) -> Profit in VES?
+                    // Let's assume standard Exchange: Recieve Amount (Input) -> Give Exit Amount (Output)
+                    // We'll calculate profit based on difference between Rate and MarketRate
+                    const spread = Math.abs(rate - mRate);
+                    const profitCalc = (amt * spread).toFixed(2);
+                    newData.profit = profitCalc;
                 }
             }
+
             return newData;
         });
     };

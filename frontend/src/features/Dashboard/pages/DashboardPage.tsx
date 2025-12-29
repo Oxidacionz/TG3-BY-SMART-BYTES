@@ -3,6 +3,7 @@ import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { Card } from '../../../components/atoms/Card';
 import { Icons } from '../../../components/atoms/Icons';
 import { StatCard } from '../../../components/molecules/StatCard';
+import { RatesWithClock } from '../../../components/molecules/RatesWithClock';
 import { Stats } from '../../../types';
 
 
@@ -27,25 +28,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, chartType, 
 
             {/* Ticker Tape */}
             {/* ... Ticker content ... */}
-            <div className="bg-slate-900 text-white p-2 overflow-hidden whitespace-nowrap relative rounded-lg shadow-inner flex items-center gap-8 text-xs font-mono">
-                <span className="text-amber-400 font-bold flex items-center gap-1 mx-4">
-                    TORO GROUP
-                </span>
-                <span className="flex items-center gap-1"><span className="text-slate-400">GLOBAL:</span> <span className="text-green-400 font-bold">{stats?.ticker?.global_rate || '---'}</span></span>
-                <span className="flex items-center gap-1"><span className="text-slate-400">BCV USD:</span> <span className="font-bold">{stats?.ticker?.bcv_usd || '---'}</span> <span className={parseFloat(stats?.ticker?.bcv_usd) > 46 ? "text-green-400" : "text-red-400"}>{parseFloat(stats?.ticker?.bcv_usd) > 46 ? '▲' : '▼'}</span></span>
-                <span className="flex items-center gap-1"><span className="text-slate-400">BCV EUR:</span> <span className="font-bold">{stats?.ticker?.bcv_eur || '---'}</span></span>
-                <span className="flex items-center gap-1"><span className="text-slate-400">BINANCE P2P:</span> <span className="text-yellow-400 font-bold">{stats?.ticker?.binance_buy || '---'}</span></span>
-                <span className="flex items-center gap-1"><span className="text-slate-400">ZELLE:</span> <span className="text-purple-400 font-bold">{stats?.ticker?.zelle || '---'}</span></span>
-
-                <button
-                    onClick={onRefreshRates}
-                    disabled={isRefreshingRates}
-                    className={`ml-auto mr-2 p-1 rounded hover:bg-slate-800 transition-colors ${isRefreshingRates ? 'animate-spin text-amber-500' : 'text-slate-400'}`}
-                    title="Forzar actualización de tasas"
-                >
-                    <Icons.Refresh />
-                </button>
-            </div>
+            {/* Ticker Tape with Clock */}
+            <RatesWithClock
+                ticker={stats?.ticker}
+                onRefresh={onRefreshRates}
+                isRefreshing={isRefreshingRates}
+            />
 
 
 

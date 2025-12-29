@@ -116,6 +116,7 @@ export const SmartScanner: React.FC<SmartScannerProps> = ({ onScanComplete, onVi
                     {loading ? "Analizando imagen con IA..." : "Sube una captura de pago móvil o transferencia."}
                 </p>
 
+
                 {error && <p className="text-red-400 text-xs mb-4 bg-red-900/30 p-2 rounded border border-red-800">{error}</p>}
 
                 <div className="space-y-3 w-full">

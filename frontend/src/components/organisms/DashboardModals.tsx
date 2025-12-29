@@ -49,22 +49,38 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
                     </div>
 
                     <div className="flex-1 space-y-1.5 overflow-y-auto pr-1 custom-scrollbar">
-                        {/* Transaction Type Buttons - Ultra Compact */}
-                        <div className="flex gap-1.5">
-                            <button
-                                onClick={() => handleInputChange({ target: { name: 'type', value: 'ENTRADA' } } as any)}
-                                className={`flex-1 py-1 rounded text-[10px] font-bold transition-all flex items-center justify-center gap-1 ${formData.type === 'ENTRADA' ? 'bg-green-600 text-white shadow shadow-green-900/50' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-700'}`}
-                            >
-                                <Icons.Download />
-                                <span>ENTRADA</span>
-                            </button>
-                            <button
-                                onClick={() => handleInputChange({ target: { name: 'type', value: 'SALIDA' } } as any)}
-                                className={`flex-1 py-1 rounded text-[10px] font-bold transition-all flex items-center justify-center gap-1 ${formData.type === 'SALIDA' ? 'bg-red-600 text-white shadow shadow-red-900/50' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-700'}`}
-                            >
-                                <Icons.Upload />
-                                <span>SALIDA</span>
-                            </button>
+                        {/* Transaction Category Selector */}
+                        <div className="flex gap-2 items-end mb-1">
+                            <div className="flex-1 space-y-0.5">
+                                <label className="font-bold text-[9px] uppercase text-slate-500 dark:text-slate-400">Tipo de Operación</label>
+                                <select
+                                    name="category"
+                                    className="w-full px-2 py-1 text-xs border rounded bg-slate-100 dark:bg-slate-900 dark:border-slate-700 dark:text-white h-7 font-bold border-l-4 border-l-indigo-500"
+                                    value={formData.category}
+                                    onChange={handleInputChange}
+                                >
+                                    <optgroup label="Tesorería">
+                                        <option value="CAMBIO_DIVISA">💱 Cambio de Divisa</option>
+                                        <option value="TRANSFERENCIA_INTERNA">🔄 Transferencia Interna</option>
+                                    </optgroup>
+                                    <optgroup label="Ingresos">
+                                        <option value="VENTA">💰 Venta</option>
+                                        <option value="COBRO_DEUDA">📥 Cobro de Deuda</option>
+                                        <option value="INYECCION_CAPITAL">🏦 Inyección Capital</option>
+                                    </optgroup>
+                                    <optgroup label="Egresos">
+                                        <option value="GASTO_OPERATIVO">💸 Gasto Operativo</option>
+                                        <option value="PAGO_PROVEEDOR">🏭 Pago Proveedor</option>
+                                        <option value="NOMINA">👥 Nómina</option>
+                                        <option value="RETIRO_CAPITAL">💼 Retiro Socio</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div className={`px-2 py-1 rounded text-[10px] font-bold h-7 flex items-center justify-center min-w-[60px] shadow-sm ${formData.type === 'ENTRADA' ? 'bg-green-600 text-white' :
+                                formData.type === 'SALIDA' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'
+                                }`}>
+                                {formData.type}
+                            </div>
                         </div>
 
                         {/* Row 1: Client (65%) + Doc (35%) */}
@@ -93,7 +109,7 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
                         </div>
 
                         {/* Row 2: Monto, Moneda, Tasa */}
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                             <div className='space-y-0.5'>
                                 <label className="font-bold text-[9px] uppercase text-slate-500 dark:text-slate-400">Monto</label>
                                 <Input name="amount" type="number" value={formData.amount} onChange={handleInputChange} placeholder="0.00" className="dark:bg-slate-900 dark:border-slate-700 dark:text-white font-mono font-bold text-xs px-2 py-1 h-7" />
@@ -108,10 +124,60 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
                                 </select>
                             </div>
                             <div className='space-y-0.5'>
-                                <label className="font-bold text-[9px] uppercase text-slate-500 dark:text-slate-400">Tasa</label>
+                                <label className="font-bold text-[9px] uppercase text-slate-500 dark:text-slate-400">Tasa Op.</label>
                                 <Input name="rate" type="number" value={formData.rate} onChange={handleInputChange} placeholder="36.5" className="dark:bg-slate-900 dark:border-slate-700 dark:text-white text-xs px-2 py-1 h-7" />
                             </div>
+                            <div className='space-y-0.5'>
+                                <label className="font-bold text-[9px] uppercase text-slate-500 dark:text-slate-400">Tasa Mercado</label>
+                                <Input name="marketRate" type="number" value={formData.marketRate} onChange={handleInputChange} placeholder="38.0" className="dark:bg-slate-900 dark:border-slate-700 dark:text-white text-xs px-2 py-1 h-7 border-dashed" />
+                            </div>
                         </div>
+
+                        {/* Real-time Calculator Preview */}
+                        <div className="flex justify-between px-1 -mt-1 mb-1">
+                            <span className="text-[9px] text-slate-400">
+                                {formData.profit && <span className="text-green-500 font-bold mr-2">Ganancia Est: +{formData.profit}</span>}
+                                Eq USD: {formData.amountUSD || '0.00'} $
+                            </span>
+                            <span className="text-[9px] text-slate-400">
+                                Contravalor: <span className="font-bold text-slate-300">
+                                    {(parseFloat(formData.amount || '0') * (parseFloat(formData.rate) || 0) || 0).toLocaleString('es-VE', { minimumFractionDigits: 2 })}
+                                </span>
+                            </span>
+                        </div>
+
+                        {/* LINKED TRANSACTION BLOCK (For Currency Exchange) */}
+                        {formData.category === 'CAMBIO_DIVISA' && (
+                            <div className="bg-slate-900/50 p-2 rounded-lg border border-indigo-500/30 mb-2 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-1">
+                                    <span className="bg-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">MODO CAMBIO</span>
+                                </div>
+                                <h4 className="text-[10px] uppercase font-bold text-indigo-300 mb-1 flex items-center gap-1">
+                                    <Icons.Refresh size={10} /> Salida (Entrega)
+                                </h4>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="space-y-0.5">
+                                        <label className="font-bold text-[9px] uppercase text-slate-500">Monto A Entregar</label>
+                                        <Input
+                                            name="manualExitAmount"
+                                            type="number"
+                                            value={formData.manualExitAmount}
+                                            onChange={handleInputChange}
+                                            placeholder={(parseFloat(formData.amount || '0') * (parseFloat(formData.rate) || 0)).toFixed(2)}
+                                            className="bg-slate-800 border-slate-700 text-red-400 font-mono font-bold text-xs px-2 py-1 h-6 w-full"
+                                        />
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <label className="font-bold text-[9px] uppercase text-slate-500">Cuenta Salida</label>
+                                        <select className="w-full px-1 py-1 text-xs border rounded bg-slate-800 border-slate-700 text-white h-6">
+                                            <option>Banesco</option>
+                                            <option>Mercantil</option>
+                                            <option>Efectivo</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Row 3: Comision B, Cuenta, Ref */}
                         <div className="grid grid-cols-3 gap-2">
@@ -188,11 +254,24 @@ export const DashboardModals: React.FC<DashboardModalsProps> = ({
                             ></textarea>
                         </div>
 
-                        <div className="flex justify-end gap-2 pt-2">
-                            <Button variant="ghost" size="xs" onClick={() => setTransactionModalOpen(false)}>Cancelar</Button>
-                            <Button variant="primary" size="xs" onClick={onSubmitTransaction}>
-                                {isDemoMode ? 'Guardar (Demo)' : 'Guardar'}
-                            </Button>
+                        <div className="flex justify-between items-center pt-2">
+                            <label className="flex items-center gap-2 cursor-pointer group hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded transition-colors">
+                                <div className="relative">
+                                    <input type="checkbox" className="peer sr-only" defaultChecked />
+                                    <div className="w-8 h-4 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:bg-green-500 transition-colors"></div>
+                                    <div className="absolute left-0.5 top-0.5 w-3 h-3 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-500 group-hover:text-green-600 transition-colors flex items-center gap-1">
+                                    <Icons.WhatsApp size={12} /> Notificar
+                                </span>
+                            </label>
+
+                            <div className="flex gap-2">
+                                <Button variant="ghost" size="xs" onClick={() => setTransactionModalOpen(false)}>Cancelar</Button>
+                                <Button variant="primary" size="xs" onClick={onSubmitTransaction}>
+                                    {isDemoMode ? 'Guardar (Demo)' : 'Guardar'}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>

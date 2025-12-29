@@ -11,6 +11,7 @@ export interface CardProps {
     variant?: 'default' | 'glass' | 'bordered';
     padding?: 'none' | 'sm' | 'md' | 'lg';
     hover?: boolean;
+    onClick?: () => void;
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -18,7 +19,8 @@ export const Card: React.FC<CardProps> = ({
     className = '',
     variant = 'default',
     padding = 'md',
-    hover = false
+    hover = false,
+    onClick
 }) => {
     const baseStyles = 'rounded-xl transition-all duration-200';
 
@@ -38,7 +40,10 @@ export const Card: React.FC<CardProps> = ({
     const hoverStyles = hover ? 'hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-500/30 cursor-pointer' : '';
 
     return (
-        <div className={`${baseStyles} ${variants[variant]} ${paddings[padding]} ${hoverStyles} ${className}`}>
+        <div
+            className={`${baseStyles} ${variants[variant]} ${paddings[padding]} ${hoverStyles} ${className}`}
+            onClick={onClick}
+        >
             {children}
         </div>
     );

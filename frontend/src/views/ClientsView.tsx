@@ -4,6 +4,7 @@ import { Button } from '../components/atoms/Button';
 import { Badge } from '../components/atoms/Badge';
 import { Icons } from '../components/atoms/Icons';
 import { Input } from '../components/atoms/Input';
+import { ClientLedger } from '../components/organisms/ClientLedger';
 
 interface ClientsViewProps {
     isDemoMode: boolean;
@@ -56,23 +57,8 @@ export const ClientsView: React.FC<ClientsViewProps> = ({ isDemoMode, clients, d
             </Card>
             <div className="flex-1 flex flex-col items-center justify-center text-slate-400 bg-slate-50 dark:bg-slate-900/30 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
                 {selectedClient ? (
-                    // Placeholder for detail view
-                    <div className="text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center text-xl font-bold">
-                            {selectedClient.name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-white">{selectedClient.name}</h3>
-                        <p className="text-sm text-slate-500 mb-4">ID: {selectedClient.id}</p>
-                        <div className="flex gap-4 justify-center">
-                            <div className="text-center">
-                                <p className="text-xs text-slate-400">Volumen</p>
-                                <p className="font-bold text-slate-700 dark:text-slate-200">${selectedClient.volume}</p>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-xs text-slate-400">Transacciones</p>
-                                <p className="font-bold text-slate-700 dark:text-slate-200">{selectedClient.deals}</p>
-                            </div>
-                        </div>
+                    <div className="w-full h-full p-6">
+                        <ClientLedger client={selectedClient} isDemoMode={isDemoMode} />
                     </div>
                 ) : (
                     <>
@@ -80,7 +66,7 @@ export const ClientsView: React.FC<ClientsViewProps> = ({ isDemoMode, clients, d
                             <Icons.Users />
                         </div>
                         <h3 className="text-lg font-medium text-slate-600 dark:text-slate-400">Selecciona un cliente/proveedor</h3>
-                        <p className="text-sm">Haz clic en un cliente/proveedor o agrega uno nuevo para ver detalles.</p>
+                        <p className="text-sm">Haz clic en un cliente/proveedor o agrega uno nuevo para ver su Estado de Cuenta.</p>
                     </>
                 )}
             </div>
