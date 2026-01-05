@@ -51,9 +51,9 @@ const App = () => {
       onNewTransaction={() => setTransactionModalOpen(true)} onSupport={() => setSupportModalOpen(true)}
     >
       {currentView === 'dashboard' && <DashboardView stats={isDemoMode ? DEMO_STATS : stats} chartType={chartType} setChartType={setChartType} isDemoMode={isDemoMode} onRefreshRates={handleRefreshRates} isRefreshingRates={isRefreshingRates} />}
-      {currentView === 'transactions' && <TransactionsView transactions={transactions} onNewTransaction={() => setTransactionModalOpen(true)} isDemoMode={isDemoMode} demoTransactions={demoTransactions} />}
+
       {currentView === 'accounts' && <AccountsView />}
-      {currentView === 'account_book' && <AccountBookView />}
+      {currentView === 'account_book' && <AccountBookView isDemoMode={isDemoMode} demoTransactions={DEMO_TRANSACTIONS} />}
       {currentView === 'clients' && <ClientsView isDemoMode={isDemoMode} clients={clients} demoClients={DEMO_CLIENTS} />}
       {currentView === 'operators' && <OperatorsView isDemoMode={isDemoMode} operators={operators} demoOperators={DEMO_OPERATORS} />}
       {currentView === 'notes' && <NotesView />}

@@ -94,7 +94,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 <nav className="flex-1 overflow-y-auto px-2 space-y-1 sidebar-navigation relative z-10 scrollbar-thin scrollbar-thumb-slate-800">
                     <SidebarItem icon={<Icons.Dashboard />} label="Dashboard" active={currentView === 'dashboard'} onClick={() => { setCurrentView('dashboard'); setIsMobileMenuOpen(false); }} />
                     {/* <SidebarItem icon={<Icons.Inbox />} label="Mensajes (Inbox)" active={currentView === 'inbox'} onClick={() => { setCurrentView('inbox'); setIsMobileMenuOpen(false); }} /> */}
-                    <SidebarItem icon={<Icons.Transactions />} label="Transacciones" active={currentView === 'transactions'} onClick={() => { setCurrentView('transactions'); setIsMobileMenuOpen(false); }} />
+
                     <SidebarItem icon={<Icons.Wallet />} label="Cuentas & Bancos" active={currentView === 'accounts'} onClick={() => { setCurrentView('accounts'); setIsMobileMenuOpen(false); }} />
                     <SidebarItem icon={<Icons.Book />} label="Libro de Cuentas" active={currentView === 'account_book'} onClick={() => { setCurrentView('account_book'); setIsMobileMenuOpen(false); }} />
                     <SidebarItem icon={<Icons.Users />} label="Clientes/Proveedores" active={currentView === 'clients'} onClick={() => { setCurrentView('clients'); setIsMobileMenuOpen(false); }} />
@@ -145,7 +145,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                         </button>
 
                         <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent capitalize drop-shadow-sm truncate max-w-[200px] md:max-w-none">
-                            {currentView === 'operators' ? 'Operadores' : currentView === 'clients' ? 'Clientes / Proveedores' : currentView}
+                            {currentView === 'operators' ? 'Operadores' : currentView === 'clients' ? 'Clientes / Proveedores' : currentView === 'account_book' ? 'Libro de Cuentas' : currentView === 'accounts' ? 'Tesorería' : currentView}
                         </h1>
                     </div>
 

@@ -6,11 +6,11 @@ from src.transactions.infrastructure.repository import transaction_repo
 router = APIRouter()
 
 @router.get("/", response_model=List[Transaction])
-async def get_transactions():
+async def get_transactions(limit: int = 1000):
     """
     Get all recent transactions.
     """
-    return await transaction_repo.get_all()
+    return await transaction_repo.get_all(limit=limit)
 
 @router.post("/", response_model=Transaction)
 async def create_transaction(transaction: Transaction):

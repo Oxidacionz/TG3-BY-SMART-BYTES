@@ -3,14 +3,43 @@ import { Card } from '../components/atoms/Card';
 import { useFetchData } from '../hooks/useFetchData';
 import { Icons } from '../components/atoms/Icons';
 
+import { StatCard } from '../components/molecules/StatCard';
 import { Modal } from '../components/molecules/Modal';
 import { Button } from '../components/atoms/Button';
 import { Input } from '../components/atoms/Input';
 import { transactionService } from '../services/transactionService';
 
-export const AccountBookView: React.FC = () => {
+interface AccountBookViewProps {
+    isDemoMode?: boolean;
+    demoTransactions?: any[];
+}
+
+export const AccountBookView: React.FC<AccountBookViewProps> = ({ isDemoMode = false, demoTransactions = [] }) => {
     const { data: accounts, loading: loadingAccounts, refetch: refetchAccounts } = useFetchData('/finance/accounts', []);
-    const { data: transactions, loading: loadingTransactions, refetch: refetchTransactions } = useFetchData('/transactions/', []);
+    const { data: apiTransactions, loading: loadingApiTransactions, refetch: refetchTransactions } = useFetchData('/transactions/?limit=1000', []);
+
+    // Map demo transactions to view schema
+    const transactions = useMemo(() => {
+        if (isDemoMode) {
+            return demoTransactions.map(t => ({
+                id: t.id,
+                created_at: new Date().toISOString(), // Use current time for better date filtering demo
+                transaction_date: new Date().toISOString(),
+                category: t.type === 'ENTRADA' ? 'VENTA' : 'GASTO_OPERATIVO',
+                receiver_name: t.type === 'SALIDA' ? t.client : 'Toro Group',
+                sender_name: t.type === 'ENTRADA' ? t.client : 'Toro Group',
+                platform: t.clientBank,
+                transaction_type: t.type,
+                amount: parseFloat(t.amount),
+                currency: t.currency,
+                amount_usd: t.currency === 'USD' ? parseFloat(t.amount) : parseFloat(t.amount) * 1.02, // Mock rate
+                status: 'COMPLETED'
+            }));
+        }
+        return apiTransactions;
+    }, [isDemoMode, demoTransactions, apiTransactions]);
+
+    const loadingTransactions = isDemoMode ? false : loadingApiTransactions;
 
     // Filters
     const [filterCategory, setFilterCategory] = useState<string>('ALL');
@@ -66,19 +95,62 @@ export const AccountBookView: React.FC = () => {
         }
     };
 
+    const [dateFilterType, setDateFilterType] = useState<'ALL_TIME' | 'DAY' | 'WEEK' | 'MONTH' | 'YEAR'>('ALL_TIME');
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
+
     const filteredTransactions = useMemo(() => {
         if (!transactions) return [];
-        if (filterCategory === 'ALL') return transactions;
+        let result = transactions;
 
-        return transactions.filter((tx: any) => {
-            const cat = tx.category;
-            if (filterCategory === 'NOMINA') return cat === 'NOMINA';
-            if (filterCategory === 'GASTOS') return ['GASTO_OPERATIVO', 'PAGO_PROVEEDOR', 'RETIRO_CAPITAL'].includes(cat);
-            if (filterCategory === 'CAMBIOS') return cat === 'CAMBIO_DIVISA';
-            if (filterCategory === 'VENTAS') return ['VENTA', 'COBRO_DEUDA', 'INYECCION_CAPITAL'].includes(cat);
-            return true;
-        });
-    }, [transactions, filterCategory]);
+        // Date Filters
+        if (dateFilterType !== 'ALL_TIME') {
+            result = result.filter((tx: any) => {
+                const txDate = new Date(tx.created_at || tx.transaction_date);
+                // Check valid date
+                if (isNaN(txDate.getTime())) return false;
+
+                if (dateFilterType === 'DAY') {
+                    return txDate.toDateString() === selectedDate.toDateString();
+                } else if (dateFilterType === 'MONTH') {
+                    return txDate.getMonth() === selectedDate.getMonth() && txDate.getFullYear() === selectedDate.getFullYear();
+                } else if (dateFilterType === 'YEAR') {
+                    return txDate.getFullYear() === selectedDate.getFullYear();
+                } else if (dateFilterType === 'WEEK') {
+                    // Simple week check (same week number and year)
+                    const getWeek = (d: Date) => {
+                        const date = new Date(d.getTime());
+                        date.setHours(0, 0, 0, 0);
+                        date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+                        const week1 = new Date(date.getFullYear(), 0, 4);
+                        return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+                    };
+                    return getWeek(txDate) === getWeek(selectedDate) && txDate.getFullYear() === selectedDate.getFullYear();
+                }
+                return true;
+            });
+        }
+
+        // Category Filter
+        if (filterCategory !== 'ALL') {
+            result = result.filter((tx: any) => {
+                const cat = tx.category;
+                if (filterCategory === 'NOMINA') return cat === 'NOMINA';
+                if (filterCategory === 'GASTOS') return ['GASTO_OPERATIVO', 'PAGO_PROVEEDOR', 'RETIRO_CAPITAL'].includes(cat);
+                if (filterCategory === 'CAMBIOS') return cat === 'CAMBIO_DIVISA';
+                if (filterCategory === 'VENTAS') return ['VENTA', 'COBRO_DEUDA', 'INYECCION_CAPITAL'].includes(cat);
+                return true;
+            });
+        }
+        return result;
+    }, [transactions, filterCategory, dateFilterType, selectedDate]);
+
+    const paginatedTransactions = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredTransactions.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [filteredTransactions, currentPage]);
 
     const formatCurrency = (amount: number, currency: string) => {
         // Handle crypto or non-standard currencies that might crash Intl
@@ -101,59 +173,128 @@ export const AccountBookView: React.FC = () => {
                 Libro de Cuentas & Tesorería
             </h2>
 
-            {/* Accounts Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {loadingAccounts ? (
-                    <p className="text-slate-500">Cargando Cuentas...</p>
-                ) : (accounts || []).map((acc: any) => (
-                    <Card key={acc.id} className="p-4" variant={acc.type === 'CASH' ? 'default' : 'glass'}>
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="p-2 rounded-lg bg-slate-800/50 text-amber-400">
-                                {acc.type === 'CASH' && <Icons.Wallet />}
-                                {acc.type === 'BANK' && <Icons.Bank />}
-                                {acc.type === 'EWALLET' && <Icons.Zelle />}
-                                {acc.type === 'CRYPTO' && <Icons.Bitcoin />}
-                            </div>
-                            <span className="text-[10px] font-bold uppercase text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                                {acc.currency}
-                            </span>
-                        </div>
-                        <h4 className="text-sm font-medium text-slate-600 dark:text-slate-300 truncate">{acc.name}</h4>
-                        <div className="flex justify-between items-end">
-                            <p className={`text-xl font-bold mt-1 ${acc.current_balance < 0 ? 'text-red-400' : 'text-slate-900 dark:text-white'}`}>
-                                {formatCurrency(acc.current_balance, acc.currency)}
-                            </p>
-                            <button
-                                onClick={() => openAudit(acc)}
-                                className="text-[10px] bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 px-2 py-1 rounded text-slate-500 dark:text-slate-300 transition-colors"
-                                title="Realizar Arqueo"
-                            >
-                                <Icons.Refresh size={12} />
-                            </button>
-                        </div>
-                    </Card>
-                ))}
+
+
+            {/* Summary Cards */}
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <StatCard
+                    title="Total Ingresos"
+                    value={formatCurrency(filteredTransactions.reduce((acc: number, tx: any) => acc + (tx.transaction_type === 'ENTRADA' ? (tx.amount_usd || 0) : 0), 0), 'USD')}
+                    subtext="Ingresos filtrados"
+                    icon={<Icons.ArrowUpRight />}
+                    color="green"
+                />
+                <StatCard
+                    title="Total Egresos"
+                    value={formatCurrency(filteredTransactions.reduce((acc: number, tx: any) => acc + (tx.transaction_type === 'SALIDA' ? (tx.amount_usd || 0) : 0), 0), 'USD')}
+                    subtext="Egresos filtrados"
+                    icon={<Icons.ArrowDownRight />}
+                    color="red"
+                />
+                <StatCard
+                    title="Balance Neto"
+                    value={formatCurrency(filteredTransactions.reduce((acc: number, tx: any) => acc + (tx.transaction_type === 'ENTRADA' ? (tx.amount_usd || 0) : -(tx.amount_usd || 0)), 0), 'USD')}
+                    subtext="Balance de movimientos"
+                    icon={<Icons.Wallet />}
+                    color="blue"
+                />
             </div>
 
             {/* Transactions Table */}
             <Card className="p-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-white">Movimientos Recientes</h3>
-                    <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
-                        {['ALL', 'VENTAS', 'GASTOS', 'NOMINA', 'CAMBIOS'].map((cat) => (
-                            <button
-                                key={cat}
-                                onClick={() => setFilterCategory(cat)}
-                                className={`px-3 py-1 rounded-full text-xs font-bold transition-colors whitespace-nowrap ${filterCategory === cat
-                                    ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-md'
-                                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400'
-                                    }`}
-                            >
-                                {cat === 'ALL' ? 'Todos' : cat}
-                            </button>
-                        ))}
+                <div className="flex flex-col gap-4 mb-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <h3 className="text-lg font-bold text-slate-800 dark:text-white">Movimientos Recientes</h3>
+
+                        {/* Type Filter */}
+                        <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
+                            {['ALL', 'VENTAS', 'GASTOS', 'NOMINA', 'CAMBIOS'].map((cat) => (
+                                <button
+                                    key={cat}
+                                    onClick={() => { setFilterCategory(cat); setCurrentPage(1); }}
+                                    className={`px-3 py-1 rounded-full text-xs font-bold transition-colors whitespace-nowrap ${filterCategory === cat
+                                        ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-md'
+                                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400'
+                                        }`}
+                                >
+                                    {cat === 'ALL' ? 'Todos' : cat}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Date Filters */}
+                    <div className="flex flex-col md:flex-row gap-4 items-center bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg">
+                        <div className="flex gap-2">
+                            {['ALL_TIME', 'DAY', 'WEEK', 'MONTH', 'YEAR'].map((type) => (
+                                <button
+                                    key={type}
+                                    onClick={() => { setDateFilterType(type as any); setCurrentPage(1); }}
+                                    className={`px-3 py-1 rounded text-xs font-bold transition-colors ${dateFilterType === type
+                                        ? 'bg-blue-600 text-white shadow-sm'
+                                        : 'bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                                        }`}
+                                >
+                                    {type === 'ALL_TIME' && 'Todo'}
+                                    {type === 'DAY' && 'Día'}
+                                    {type === 'WEEK' && 'Semana'}
+                                    {type === 'MONTH' && 'Mes'}
+                                    {type === 'YEAR' && 'Año'}
+                                </button>
+                            ))}
+                        </div>
+
+                        {dateFilterType !== 'ALL_TIME' && (
+                            <div className="flex items-center gap-2">
+                                <Input
+                                    type={dateFilterType === 'MONTH' ? 'month' : dateFilterType === 'YEAR' ? 'number' : dateFilterType === 'WEEK' ? 'week' : 'date'}
+                                    value={
+                                        dateFilterType === 'YEAR' ? selectedDate.getFullYear().toString() :
+                                            dateFilterType === 'MONTH' ? selectedDate.toISOString().slice(0, 7) :
+                                                dateFilterType === 'WEEK' ? (() => {
+                                                    // Format: YYYY-Www
+                                                    const d = new Date(selectedDate);
+                                                    d.setHours(0, 0, 0, 0);
+                                                    d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+                                                    const week1 = new Date(d.getFullYear(), 0, 4);
+                                                    const week = 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+                                                    return `${d.getFullYear()}-W${week.toString().padStart(2, '0')}`;
+                                                })() :
+                                                    selectedDate.toISOString().slice(0, 10)
+                                    }
+                                    onChange={(e) => {
+                                        if (!e.target.value) return;
+                                        const val = e.target.value;
+                                        setCurrentPage(1);
+                                        if (dateFilterType === 'YEAR') {
+                                            const year = parseInt(val);
+                                            const newDate = new Date(selectedDate);
+                                            newDate.setFullYear(year);
+                                            setSelectedDate(newDate);
+                                        } else if (dateFilterType === 'WEEK') {
+                                            // Handle YYYY-Www, rough approx sufficient for setting state, actual filtering uses library or simple math usually
+                                            // For now, simple parsing if needed or rely on Input behavior
+                                            const [y, w] = val.split('-W');
+                                            // Calculate date from week... simplistic approach:
+                                            const simple = new Date(parseInt(y), 0, 1 + (parseInt(w) - 1) * 7);
+                                            setSelectedDate(simple);
+                                        } else {
+                                            // Month (YYYY-MM) or Date (YYYY-MM-DD) work with new Date()
+                                            // Need to append day for month type to be safe? new Date('2024-02') works as Feb 1
+                                            // But for local time issues, better to handle carefully. 
+                                            // For simplicity in this iteration:
+                                            setSelectedDate(new Date(val));
+                                        }
+                                    }}
+                                    className="w-auto h-8 text-sm"
+                                />
+                                {dateFilterType === 'WEEK' && <span className="text-xs text-slate-400">(Inicio aprox)</span>}
+                            </div>
+                        )}
                     </div>
                 </div>
+
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-slate-500 dark:text-slate-400">
                         <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-800 dark:text-slate-300">
@@ -169,7 +310,7 @@ export const AccountBookView: React.FC = () => {
                         <tbody>
                             {loadingTransactions ? (
                                 <tr><td colSpan={6} className="text-center py-4">Cargando movimientos...</td></tr>
-                            ) : (filteredTransactions || []).map((tx: any) => (
+                            ) : (paginatedTransactions || []).map((tx: any) => (
                                 <tr key={tx.id} className="bg-white border-b dark:bg-slate-900 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
                                     <td className="px-6 py-4">
                                         {new Date(tx.created_at || tx.transaction_date).toLocaleDateString()} <br />
@@ -206,12 +347,39 @@ export const AccountBookView: React.FC = () => {
                                     </td>
                                 </tr>
                             ))}
-                            {!loadingTransactions && (!transactions || transactions.length === 0) && (
+                            {!loadingTransactions && (!paginatedTransactions || paginatedTransactions.length === 0) && (
                                 <tr><td colSpan={6} className="text-center py-8">No hay movimientos registrados.</td></tr>
                             )}
                         </tbody>
                     </table>
                 </div>
+                {/* Pagination Controls */}
+                {!loadingTransactions && filteredTransactions.length > 0 && (
+                    <div className="flex justify-between items-center py-4 border-t border-slate-100 dark:border-slate-800">
+                        <span className="text-xs text-slate-500">
+                            Mostrando {Math.min((currentPage - 1) * 10 + 1, filteredTransactions.length)} - {Math.min(currentPage * 10, filteredTransactions.length)} de {filteredTransactions.length}
+                        </span>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="ghost"
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            >
+                                <Icons.ChevronLeft size={16} /> Anterior
+                            </Button>
+                            <span className="flex items-center text-sm font-bold bg-slate-100 dark:bg-slate-800 px-3 rounded text-slate-600 dark:text-slate-300">
+                                {currentPage}
+                            </span>
+                            <Button
+                                variant="ghost"
+                                disabled={currentPage * 10 >= filteredTransactions.length}
+                                onClick={() => setCurrentPage(p => p + 1)}
+                            >
+                                Siguiente <Icons.ChevronRight size={16} />
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </Card>
             {/* Audit Modal */}
             <Modal isOpen={isAuditModalOpen} onClose={() => setAuditModalOpen(false)} title="Arqueo Rápido de Cuenta">
@@ -242,8 +410,8 @@ export const AccountBookView: React.FC = () => {
 
                         {realBalance && (
                             <div className={`p-3 rounded border ${parseFloat(realBalance) - parseFloat(selectedAccount.current_balance) === 0
-                                    ? 'bg-green-100 border-green-200 text-green-700'
-                                    : parseInt(realBalance) > 0 ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : ''
+                                ? 'bg-green-100 border-green-200 text-green-700'
+                                : parseInt(realBalance) > 0 ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : ''
                                 }`}>
                                 <div className="flex justify-between text-sm font-bold">
                                     <span>Diferencia:</span>

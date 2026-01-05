@@ -12,7 +12,7 @@ from supabase_config import get_supabase_client, is_supabase_enabled
 # ============================================
 # SQLite Database Setup (Fallback)
 # ============================================
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./exchange_rates_v3.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./database/exchange_rates_v3.db")
 
 # Fix for SQLAlchemy compatibility with some providers that use postgres://
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
