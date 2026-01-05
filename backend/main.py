@@ -27,12 +27,14 @@ app.add_middleware(
 
 from src.scanner.infrastructure.routes import router as scanner_router
 from src.shared.infrastructure.resources_routes import router as resources_router
+from src.finance.infrastructure.routes import router as finance_router
 
 # Register Feature Routers
 app.include_router(transactions_router, prefix="/api/v1/transactions", tags=["Transactions"])
 app.include_router(dashboard_router, prefix="/api/v1/stats", tags=["Dashboard"])
 app.include_router(scanner_router, prefix="/api/v1/scanner", tags=["Scanner"])
 app.include_router(resources_router, prefix="/api/v1/resources", tags=["Resources"])
+app.include_router(finance_router, prefix="/api/v1/finance", tags=["Finance"])
 
 @app.get("/health", tags=["Health"])
 async def health_check():

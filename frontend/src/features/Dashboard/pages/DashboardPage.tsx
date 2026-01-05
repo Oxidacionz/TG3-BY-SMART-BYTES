@@ -14,13 +14,27 @@ interface DashboardViewProps {
     isDemoMode: boolean;
     onRefreshRates: () => void;
     isRefreshingRates: boolean;
+    onNavigateToAccountBook: () => void;
+    recentTransactions: any[];
 }
 
 import { AdvisorModal } from '../../../components/organisms/AdvisorModal';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ stats, chartType, setChartType, isDemoMode, onRefreshRates, isRefreshingRates }) => {
+export const DashboardView: React.FC<DashboardViewProps> = ({ stats, chartType, setChartType, isDemoMode, onRefreshRates, isRefreshingRates, onNavigateToAccountBook, recentTransactions = [] }) => {
     const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
+
+    // Filter transactions for "Today"
+    const todayTransactions = useMemo(() => {
+        const now = new Date();
+        const todayStr = now.toDateString();
+
+        return recentTransactions.filter(tx => {
+            // Handle both ISO strings and Date objects if necessary, assuming ISO from backend/mock
+            const txDate = new Date(tx.created_at || tx.transaction_date || tx.date);
+            return txDate.toDateString() === todayStr;
+        }).sort((a, b) => new Date(b.created_at || b.date).getTime() - new Date(a.created_at || a.date).getTime());
+    }, [recentTransactions]);
 
     return (
         <div className="space-y-6 animate-fade-in relative">
@@ -58,41 +72,41 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, chartType, 
             </div>
 
             {/* Main Chart Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <Card className="lg:col-span-2 p-6">
-                    <div className="flex justify-between items-center mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Card className="lg:col-span-2 !p-4">
+                    <div className="flex justify-between items-center mb-4">
                         <div>
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Rendimiento en Tiempo Real</h3>
-                            <p className="text-sm text-slate-500">Volumen vs. Ganancia (Últimos 7 días)</p>
+                            <h3 className="text-base font-bold text-slate-800 dark:text-white">Rendimiento en Tiempo Real</h3>
+                            <p className="text-xs text-slate-500">Volumen vs. Ganancia (Últimos 7 días)</p>
                         </div>
-                        <div className="flex bg-slate-100 dark:bg-slate-700/50 rounded-lg p-1">
-                            <button onClick={() => setChartType('line')} className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartType === 'line' ? 'bg-white dark:bg-slate-600 shadow text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}>Línea</button>
-                            <button onClick={() => setChartType('bar')} className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartType === 'bar' ? 'bg-white dark:bg-slate-600 shadow text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}>Barras</button>
-                            <button onClick={() => setChartType('pie')} className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartType === 'pie' ? 'bg-white dark:bg-slate-600 shadow text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}>Circular</button>
+                        <div className="flex bg-slate-100 dark:bg-slate-700/50 rounded-lg p-0.5">
+                            <button onClick={() => setChartType('line')} className={`px-2 py-0.5 text-[10px] font-medium rounded transition-all ${chartType === 'line' ? 'bg-white dark:bg-slate-600 shadow text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}>Línea</button>
+                            <button onClick={() => setChartType('bar')} className={`px-2 py-0.5 text-[10px] font-medium rounded transition-all ${chartType === 'bar' ? 'bg-white dark:bg-slate-600 shadow text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}>Barras</button>
+                            <button onClick={() => setChartType('pie')} className={`px-2 py-0.5 text-[10px] font-medium rounded transition-all ${chartType === 'pie' ? 'bg-white dark:bg-slate-600 shadow text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700'}`}>Circular</button>
                         </div>
                     </div>
 
-                    <div className="h-72 w-full">
+                    <div className="h-56 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             {chartType === 'line' ? (
                                 <LineChart data={stats?.chart_data || []}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
                                         cursor={{ stroke: '#6366f1', strokeWidth: 2 }}
                                     />
-                                    <Line type="monotone" dataKey="volume" stroke="#6366f1" strokeWidth={3} dot={{ r: 4, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
-                                    <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} />
+                                    <Line type="monotone" dataKey="volume" stroke="#6366f1" strokeWidth={2} dot={{ r: 3, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 5 }} />
+                                    <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={2} dot={{ r: 3, fill: '#10b981', strokeWidth: 2, stroke: '#fff' }} />
                                 </LineChart>
                             ) : chartType === 'bar' ? (
                                 <BarChart data={stats?.chart_data || []}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} dy={10} />
-                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8' }} />
                                     <Tooltip
-                                        contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
                                         cursor={{ fill: 'rgba(99, 102, 241, 0.1)' }}
                                     />
                                     <Bar dataKey="volume" fill="#6366f1" radius={[4, 4, 0, 0]} />
@@ -104,8 +118,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, chartType, 
                                         data={stats?.chart_data || []}
                                         cx="50%"
                                         cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={80}
+                                        innerRadius={50}
+                                        outerRadius={70}
                                         paddingAngle={5}
                                         dataKey="volume"
                                     >
@@ -113,8 +127,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, chartType, 
                                             <Cell key={`cell-${index}`} fill={['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'][index % 5]} />
                                         ))}
                                     </Pie>
-                                    <Tooltip />
-                                    <Legend />
+                                    <Tooltip contentStyle={{ fontSize: '12px' }} />
+                                    <Legend wrapperStyle={{ fontSize: '10px' }} />
                                 </PieChart>
                             )}
                         </ResponsiveContainer>
@@ -122,22 +136,53 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ stats, chartType, 
                 </Card>
 
                 {/* Right Sidebar: Activity */}
-                <div className="space-y-6">
-                    <Card className="p-6 flex flex-col h-full">
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Actividad Reciente</h3>
-                        <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-                            {[1, 2, 3, 4, 5].map((_, i) => (
-                                <div key={i} className="flex gap-3 items-start pb-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs text-white ${['bg-green-500', 'bg-blue-500', 'bg-amber-500'][i % 3]}`}>
-                                        <Icons.Transactions />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-800 dark:text-white">Nueva transacción <span className="font-bold">+{100 * (i + 1)} USD</span></p>
-                                        <p className="text-xs text-slate-400">Hace {5 * (i + 1)} min • Zelle</p>
-                                    </div>
-                                </div>
-                            ))}
+                <div className="space-y-4">
+                    <Card className="!p-4 flex flex-col h-full relative">
+                        <div className="flex justify-between items-center mb-3">
+                            <h3 className="text-base font-bold text-slate-800 dark:text-white">Actividad de Hoy</h3>
+                            <button onClick={onNavigateToAccountBook} className="text-[10px] text-indigo-500 hover:text-indigo-600 font-bold">Ver Todo</button>
                         </div>
+
+                        <div className="flex-1 space-y-3">
+                            {todayTransactions.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-slate-400 text-xs">
+                                    <Icons.Clock size={24} className="mb-2 opacity-50" />
+                                    <p>No hay movimientos hoy</p>
+                                </div>
+                            ) : (
+                                todayTransactions.slice(0, 4).map((tx, i) => (
+                                    <div key={i} className="flex gap-2.5 items-start pb-2 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
+                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] text-white shrink-0 ${tx.type === 'ENTRADA' ? 'bg-green-500' : tx.type === 'SALIDA' ? 'bg-red-500' : 'bg-blue-500'}`}>
+                                            {tx.type === 'ENTRADA' ? <Icons.ArrowUpRight size={14} /> : tx.type === 'SALIDA' ? <Icons.ArrowDownRight size={14} /> : <Icons.Transactions size={14} />}
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-medium text-slate-800 dark:text-white leading-tight">
+                                                {tx.category || 'Transacción'}
+                                                <span className={`font-bold ml-1 ${tx.type === 'ENTRADA' ? 'text-green-600' : 'text-red-600'}`}>
+                                                    {tx.type === 'ENTRADA' ? '+' : '-'}{tx.amount} {tx.currency}
+                                                </span>
+                                            </p>
+                                            <p className="text-[10px] text-slate-400">
+                                                {new Date(tx.created_at || tx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {tx.client || tx.receiver_name || 'General'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Navigation Bubble if more items exist */}
+                        {todayTransactions.length > 4 && (
+                            <div className="mt-4 flex justify-center">
+                                <button
+                                    onClick={onNavigateToAccountBook}
+                                    className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold py-1.5 px-4 rounded-full transition-colors flex items-center gap-1 shadow-sm"
+                                >
+                                    <Icons.Book size={12} />
+                                    Ver {todayTransactions.length - 4} más de hoy
+                                </button>
+                            </div>
+                        )}
                     </Card>
                 </div>
             </div>

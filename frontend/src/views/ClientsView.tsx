@@ -84,5 +84,5 @@ export const ClientsView: React.FC<ClientsViewProps> = ({ isDemoMode, clients, d
             </div>
         </div>
     );
-    );
+
 };

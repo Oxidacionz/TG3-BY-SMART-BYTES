@@ -52,17 +52,17 @@ export const StatCard: React.FC<StatCardProps> = ({
     return (
         <Card
             variant="glass"
-            className={`!bg-gray-950 !border-gray-800 shadow-2xl ${className} ${onClick ? 'cursor-pointer hover:bg-slate-900/50 transition-colors' : ''}`}
+            className={`!bg-gray-950 !border-gray-800 shadow-xl ${className} ${onClick ? 'cursor-pointer hover:bg-slate-900/50 transition-colors' : ''} !p-4`}
             onClick={onClick}
         >
             <div className={`flex items-start justify-between ${reverseLayout ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex-1 ${reverseLayout ? 'text-right' : 'text-left'}`}>
-                    <div className={`flex items-center gap-2 mb-1 ${reverseLayout ? 'justify-end' : ''}`}>
-                        <p className="text-sm text-slate-400 font-medium">{title}</p>
+                    <div className={`flex items-center gap-2 mb-0.5 ${reverseLayout ? 'justify-end' : ''}`}>
+                        <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">{title}</p>
                         {tooltipText && (
                             <Tooltip content={tooltipText} position="top">
                                 <svg
-                                    className="w-4 h-4 text-slate-500 hover:text-slate-300 cursor-help transition-colors"
+                                    className="w-3.5 h-3.5 text-slate-500 hover:text-slate-300 cursor-help transition-colors"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
@@ -77,13 +77,13 @@ export const StatCard: React.FC<StatCardProps> = ({
                             </Tooltip>
                         )}
                     </div>
-                    <p className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 mb-1 tracking-wide">
+                    <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500 mb-0.5 tracking-wide leading-tight">
                         {value}
                     </p>
-                    {displaySubtitle && <p className="text-xs text-slate-500">{displaySubtitle}</p>}
+                    {displaySubtitle && <p className="text-[10px] text-slate-500 font-medium">{displaySubtitle}</p>}
                     {trend && (
-                        <div className={`flex items-center gap-1 mt-2 text-sm font-semibold ${trend.isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <div className={`flex items-center gap-1 mt-1 text-xs font-bold ${trend.isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                 {trend.isPositive ? (
                                     <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                 ) : (
@@ -95,8 +95,8 @@ export const StatCard: React.FC<StatCardProps> = ({
                     )}
                 </div>
                 {icon && (
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${iconClass} ${reverseLayout ? 'mr-4' : ''}`}>
-                        {icon}
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${iconClass} ${reverseLayout ? 'mr-3' : ''}`}>
+                        {React.cloneElement(icon as React.ReactElement, { size: 20 })}
                     </div>
                 )}
             </div>

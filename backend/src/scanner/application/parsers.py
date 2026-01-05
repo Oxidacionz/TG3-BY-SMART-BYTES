@@ -1,7 +1,14 @@
 from typing import Dict, Any
 import json
 from src.shared.config.logger import logger
-from src.transactions.domain.transaction import Transaction, FinancialPlatform, Currency
+from src.transactions.domain.transaction import (
+    Transaction, 
+    FinancialPlatform, 
+    Currency,
+    TransactionType,
+    TransactionCategory,
+    TransactionStatus
+)
 
 class GeminiResponseParser:
     def parse(self, raw_response: str) -> Dict[str, Any]:
@@ -70,14 +77,50 @@ class ReceiptDataMapper:
             except:
                 amount = 0.0
 
+        # Normalize Transaction Type
+        raw_type = raw_data.get("transaction_type", "NEUTRO")
+        try:
+            tx_type = TransactionType(raw_type)
+        except ValueError:
+            tx_type = TransactionType.NEUTRO # Fallback
+
+        # Normalize Category
+        raw_cat = raw_data.get("category", "OTROS")
+        try:
+            category = TransactionCategory(raw_cat)
+        except ValueError:
+            category = TransactionCategory.OTROS
+
+        # Normalize Status (Debt Logic)
+        payment_status = raw_data.get("payment_status", "COMPLETO")
+        status = TransactionStatus.PENDING # Default
+
+        if payment_status == "COMPLETO":
+            status = TransactionStatus.COMPLETED
+        elif payment_status == "DEUDA_POR_PAGAR":
+            status = TransactionStatus.PENDING_DELIVERY # We owe money/goods
+        elif payment_status == "DEUDA_POR_COBRAR":
+            status = TransactionStatus.ACCOUNTS_RECEIVABLE # They owe us
+        
+        # Partial Flag to Description
+        description = raw_data.get("description", "")
+        if raw_data.get("is_partial"):
+            description = f"[PARCIAL] {description}"
+
         return Transaction(
             platform=platform,
             amount=float(amount),
             currency=raw_data.get("currency", Currency.VES),
-            reference_id=raw_data.get("reference_id"),
+            reference_id=raw_data.get("reference_number") or raw_data.get("reference_id"), # Prompt updated to reference_number but fallback
             transaction_date=raw_data.get("transaction_date"),
             sender_name=raw_data.get("sender_name"),
             receiver_name=raw_data.get("receiver_name"),
             raw_text=raw_data.get("raw_text_snippet"),
-            status="Pendiente"
+            
+            # New Mapped Fields
+            transaction_type=tx_type,
+            category=category,
+            status=status,
+            description=description,
+            exchange_rate=raw_data.get("exchange_rate") or 1.0
         )

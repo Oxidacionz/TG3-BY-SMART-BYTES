@@ -64,6 +64,7 @@ class TransactionStatus(str, Enum):
     CANCELLED = "CANCELLED"
     PENDING_DELIVERY = "PENDING_DELIVERY" # Money received, but counterpart not sent
     ACCOUNTS_PAYABLE = "ACCOUNTS_PAYABLE" # Expense recorded, payment pending
+    ACCOUNTS_RECEIVABLE = "ACCOUNTS_RECEIVABLE" # Money sent, counterpart pending (Debt to us)
 
 # 2. Entidad de Dominio
 class Transaction(BaseModel):

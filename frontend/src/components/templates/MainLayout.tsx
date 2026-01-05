@@ -16,6 +16,8 @@ interface MainLayoutProps {
     setIsMobileMenuOpen: (isOpen: boolean) => void;
     setCurrentView: (view: string) => void;
     onNewTransaction: () => void;
+    onNewEntry?: () => void; // Optional to avoid breaking tests/other usages
+    onNewExit?: () => void;
     onSupport: () => void;
 }
 
@@ -31,6 +33,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     setIsMobileMenuOpen,
     setCurrentView,
     onNewTransaction,
+    onNewEntry,
+    onNewExit,
     onSupport
 }) => {
     return (
@@ -80,14 +84,23 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                     </div>
                 </div>
 
-                <div className="p-4 smart-scanner-section relative z-10">
+                <div className="p-4 smart-scanner-section relative z-10 grid grid-cols-2 gap-3">
                     <button
-                        onClick={() => { onNewTransaction(); setIsMobileMenuOpen(false); }}
-                        className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-purple-900/50 flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] scanner-button border border-purple-400/30 group relative overflow-hidden"
+                        onClick={() => { if (onNewEntry) onNewEntry(); else onNewTransaction(); setIsMobileMenuOpen(false); }}
+                        className="bg-gradient-to-br from-green-900 to-emerald-950 hover:from-green-800 hover:to-emerald-900 text-amber-100 py-3 rounded-xl font-bold shadow-[0_4px_20px_rgba(20,83,45,0.4)] flex flex-col items-center justify-center gap-1 transition-all transform hover:scale-[1.02] border border-amber-500/30 group relative overflow-hidden h-20 ring-1 ring-amber-500/10"
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
-                        <Icons.Scan />
-                        <span className="tracking-wide">Escanear / Nuevo</span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-200/5 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                        <div className="p-1.5 bg-green-950/50 rounded-full mb-1 border border-green-800/50 shadow-inner"><Icons.ArrowUpRight size={14} className="text-green-400" /></div>
+                        <span className="text-[9px] uppercase tracking-[0.1em] font-medium bg-gradient-to-r from-white to-green-100 bg-clip-text text-transparent">Entrada</span>
+                    </button>
+
+                    <button
+                        onClick={() => { if (onNewExit) onNewExit(); else onNewTransaction(); setIsMobileMenuOpen(false); }}
+                        className="bg-gradient-to-br from-red-900 to-rose-950 hover:from-red-800 hover:to-rose-900 text-amber-100 py-3 rounded-xl font-bold shadow-[0_4px_20px_rgba(159,18,57,0.4)] flex flex-col items-center justify-center gap-1 transition-all transform hover:scale-[1.02] border border-amber-500/30 group relative overflow-hidden h-20 ring-1 ring-amber-500/10"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-200/5 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                        <div className="p-1.5 bg-red-950/50 rounded-full mb-1 border border-red-800/50 shadow-inner"><Icons.ArrowDownRight size={14} className="text-red-400" /></div>
+                        <span className="text-[9px] uppercase tracking-[0.1em] font-medium bg-gradient-to-r from-white to-red-100 bg-clip-text text-transparent">Salida</span>
                     </button>
                 </div>
 
@@ -102,14 +115,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                     {/* <SidebarItem icon={<Icons.Notes />} label="Notas" active={currentView === 'notes'} onClick={() => { setCurrentView('notes'); setIsMobileMenuOpen(false); }} /> */}
                     <SidebarItem icon={<Icons.Reports />} label="Reportes" active={currentView === 'reports'} onClick={() => { setCurrentView('reports'); setIsMobileMenuOpen(false); }} />
                     {/* <SidebarItem icon={<Icons.WhatsApp />} label="WhatsApp Bot" active={currentView === 'whatsapp'} onClick={() => { setCurrentView('whatsapp'); setIsMobileMenuOpen(false); }} /> */}
-                    <div className="pt-4 mt-4 border-t border-slate-800/50">
-                        <SidebarItem
-                            icon={<span className="text-xl">🧪</span>}
-                            label="Experimental"
-                            active={currentView === 'experiment'}
-                            onClick={() => { setCurrentView('experiment'); setIsMobileMenuOpen(false); }}
-                        />
-                    </div>
+
                 </nav>
 
                 <div className="p-4 bg-slate-900/80 backdrop-blur-sm border-t border-slate-800 relative z-10">
@@ -163,7 +169,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                 </header>
 
                 {/* CONTENT SCROLLABLE AREA */}
-                <div className="flex-1 overflow-y-auto p-6 scroll-smooth">
+                <div className="flex-1 overflow-y-auto p-4 scroll-smooth">
                     {children}
                 </div>
             </main>

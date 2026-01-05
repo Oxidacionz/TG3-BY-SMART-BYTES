@@ -12,7 +12,7 @@ export const useTransactions = (isDemoMode: boolean) => {
     // Combine new demo transactions with static mock data
     const transactions = isDemoMode ? [...demoTransactions, ...DEMO_TRANSACTIONS] : rawTransactions;
 
-    const handleSubmitTransaction = async (formData: any, onSuccess?: () => void) => {
+    const handleSubmitTransaction = async (formData: any, onSuccess?: () => void, shouldClose: boolean = true) => {
         if (isDemoMode) {
             const newTx = {
                 ...formData,
@@ -24,8 +24,8 @@ export const useTransactions = (isDemoMode: boolean) => {
                 commission: parseFloat(formData.commission) || 0
             };
             setDemoTransactions(prev => [newTx, ...prev]);
-            setTransactionModalOpen(false);
             alert("Operación registrada en MODO DEMO (Temporal)");
+            if (shouldClose) setTransactionModalOpen(false);
             if (onSuccess) onSuccess();
             return;
         }
@@ -33,7 +33,7 @@ export const useTransactions = (isDemoMode: boolean) => {
         try {
             await transactionService.createTransaction(formData);
             await refetchTransactions();
-            setTransactionModalOpen(false);
+            if (shouldClose) setTransactionModalOpen(false);
             if (onSuccess) onSuccess();
         } catch (e) {
             console.error("Error saving transaction", e);

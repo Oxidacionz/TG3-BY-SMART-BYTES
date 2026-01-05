@@ -9,6 +9,8 @@ export const getBankStyle = (bankName: string) => {
     if (norm.includes('mercantil')) return 'bg-gradient-to-br from-blue-600 to-blue-800 text-white border-blue-600 shadow-blue-200';
     if (norm.includes('paypal')) return 'bg-gradient-to-br from-blue-400 to-blue-600 text-white border-blue-400 shadow-blue-200';
     if (norm.includes('chase')) return 'bg-gradient-to-br from-blue-800 to-slate-900 text-white border-blue-800 shadow-blue-200';
+    if (norm.includes('bnc')) return 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-teal-600 shadow-teal-200';
+    if (norm.includes('venezuela') || norm.includes('bv')) return 'bg-gradient-to-br from-red-600 to-rose-700 text-white border-red-600 shadow-rose-200';
     return 'bg-gradient-to-br from-slate-500 to-slate-700 text-white';
 };
 
@@ -18,6 +20,8 @@ export const getBankIcon = (bankName: string) => {
     if (norm.includes('zelle')) return <Icons.Send />;
     if (norm.includes('banesco')) return <span className="font-bold text-lg">B</span>;
     if (norm.includes('mercantil')) return <span className="font-bold text-lg">M</span>;
+    if (norm.includes('bnc')) return <span className="font-bold text-lg">BNC</span>;
+    if (norm.includes('venezuela') || norm.includes('bv')) return <span className="font-bold text-lg">BV</span>;
     if (norm.includes('paypal')) return <span className="font-bold text-lg">P</span>;
     return <Icons.Wallet />;
 };

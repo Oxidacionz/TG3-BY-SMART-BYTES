@@ -5,7 +5,7 @@ export const useScannerForm = () => {
     const initialFormState = {
         type: 'NEUTRO',
         category: 'CAMBIO_DIVISA',
-        status: 'PENDING',
+        status: 'COMPLETED',
         operator: 'Camello_1',
         client: '',
         clientDocId: '',
@@ -130,6 +130,7 @@ export const useScannerForm = () => {
             const nextState = {
                 ...prev,
                 amount: mappedData.amount ? String(mappedData.amount) : prev.amount,
+                status: prev.status, // Keep manual status if set, or let AI override later (TODO)
                 reference: mappedData.reference ? String(mappedData.reference) : prev.reference,
                 bankOrigin: mappedData.bankOrigin ? String(mappedData.bankOrigin) : prev.bankOrigin,
                 currency: mappedData.currency ? String(mappedData.currency) : prev.currency,

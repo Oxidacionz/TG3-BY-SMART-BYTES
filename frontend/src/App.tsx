@@ -41,6 +41,19 @@ const App = () => {
   const { data: clients } = useFetchData('/resources/clients', []);
   const { data: operators } = useFetchData('/resources/operators', []);
 
+  // Transaction Handlers
+  const handleNewEntry = () => {
+    resetForm();
+    setFormData(prev => ({ ...prev, type: 'ENTRADA', category: 'VENTA', status: 'COMPLETED' }));
+    setTransactionModalOpen(true);
+  };
+
+  const handleNewExit = () => {
+    resetForm();
+    setFormData(prev => ({ ...prev, type: 'SALIDA', category: 'GASTO_OPERATIVO', status: 'COMPLETED' }));
+    setTransactionModalOpen(true);
+  };
+
   if (!isLoggedIn) return <LoginTemplate onLogin={(e) => { e.preventDefault(); login(); }} onDemoLogin={demoLogin} />;
 
   return (
@@ -48,9 +61,12 @@ const App = () => {
       currentView={currentView} setCurrentView={setCurrentView} isDarkMode={isDarkMode} toggleTheme={toggleTheme}
       onLogout={logout} restartTutorial={restartTutorial} isDemoMode={isDemoMode}
       isMobileMenuOpen={isMobileMenuOpen} setIsMobileMenuOpen={setIsMobileMenuOpen}
-      onNewTransaction={() => setTransactionModalOpen(true)} onSupport={() => setSupportModalOpen(true)}
+      onNewTransaction={() => setTransactionModalOpen(true)} // Legacy fallback
+      onNewEntry={handleNewEntry}
+      onNewExit={handleNewExit}
+      onSupport={() => setSupportModalOpen(true)}
     >
-      {currentView === 'dashboard' && <DashboardView stats={isDemoMode ? DEMO_STATS : stats} chartType={chartType} setChartType={setChartType} isDemoMode={isDemoMode} onRefreshRates={handleRefreshRates} isRefreshingRates={isRefreshingRates} />}
+      {currentView === 'dashboard' && <DashboardView stats={isDemoMode ? DEMO_STATS : stats} chartType={chartType} setChartType={setChartType} isDemoMode={isDemoMode} onRefreshRates={handleRefreshRates} isRefreshingRates={isRefreshingRates} onNavigateToAccountBook={() => setCurrentView('account_book')} recentTransactions={isDemoMode ? DEMO_TRANSACTIONS : transactions} />}
 
       {currentView === 'accounts' && <AccountsView />}
       {currentView === 'account_book' && <AccountBookView isDemoMode={isDemoMode} demoTransactions={DEMO_TRANSACTIONS} />}
@@ -67,7 +83,9 @@ const App = () => {
         isTransactionModalOpen={isTransactionModalOpen} setTransactionModalOpen={setTransactionModalOpen}
         isSupportModalOpen={isSupportModalOpen} setSupportModalOpen={setSupportModalOpen}
         isDemoMode={isDemoMode} handleScanComplete={handleScanComplete} formData={formData}
-        handleInputChange={handleInputChange} onSubmitTransaction={() => handleSubmitTransaction(formData, () => { resetForm(); refetchStats(); })}
+        handleInputChange={handleInputChange}
+        onSubmitTransaction={(shouldClose) => handleSubmitTransaction(formData, () => { if (shouldClose) resetForm(); refetchStats(); }, shouldClose)}
+        onNewExit={handleNewExit}
       />
     </MainLayout>
   );

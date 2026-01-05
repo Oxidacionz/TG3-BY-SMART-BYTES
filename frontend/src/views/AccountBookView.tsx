@@ -169,9 +169,7 @@ export const AccountBookView: React.FC<AccountBookViewProps> = ({ isDemoMode = f
 
     return (
         <div className="space-y-6">
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-                Libro de Cuentas & Tesorería
-            </h2>
+
 
 
 
